@@ -53,7 +53,7 @@ Once setup completes, pick a mode:
 # Run with Foundry Local (privacy-preserving)
 npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator
 
-# Run with Microsoft Foundry (cloud — higher quality)
+# Run with Microsoft Foundry (cloud   higher quality)
 npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator \
   --cloud-endpoint https://your-project.services.foundry.microsoft.com \
   --cloud-api-key YOUR_API_KEY \
@@ -105,7 +105,7 @@ npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution
                           │
           ┌───────────────┼───────────────┐
           ▼               ▼               ▼
-   Foundry Local    Azure AI Foundry   Copilot CLI
+   Foundry Local    Microsoft Foundry   Copilot CLI
    localhost:PORT   *.cognitiveservices  JSON-RPC
    (on-device GPU)  .azure.com (cloud)  (GitHub auth)
 ```
@@ -114,18 +114,18 @@ The project has **8 source files** in `src/`:
 
 | File | Role |
 |------|------|
-| `index.ts` | CLI entry point — Commander argument parsing |
-| `server.ts` | Web UI — HTTP server with SSE progress streaming |
+| `index.ts` | CLI entry point   Commander argument parsing |
+| `server.ts` | Web UI   HTTP server with SSE progress streaming |
 | `orchestrator.ts` | 9-step generation pipeline with tool-calling pattern |
-| `localModelClient.ts` | LLM client for Foundry Local and Azure AI Foundry (OpenAI-compatible) |
+| `localModelClient.ts` | LLM client for Foundry Local and Microsoft Foundry (OpenAI-compatible) |
 | `copilotSdkClient.ts` | LLM client for GitHub Copilot SDK (`@github/copilot-sdk`) |
-| `repoScanner.ts` | Repository analysis — languages, deps, build systems, structure |
+| `repoScanner.ts` | Repository analysis   languages, deps, build systems, structure |
 | `types.ts` | Shared TypeScript interfaces |
 | `validation.ts` | Input validation and security checks |
 
 ## Hybrid AI Approach
 
-This tool supports three inference backends — use whichever fits your needs:
+This tool supports three inference backends   use whichever fits your needs:
 
 ### Foundry Local (Privacy-First)
 
@@ -136,7 +136,7 @@ All processing stays on your machine:
 - **Dependency inventory**: Generate descriptions for packages
 - **Architecture inference**: Determine patterns from structure
 
-> Install: `winget install Microsoft.FoundryLocal` — see [Starting Foundry Local](#starting-foundry-local)
+> Install: `winget install Microsoft.FoundryLocal`   see [Starting Foundry Local](#starting-foundry-local)
 
 ### Microsoft Foundry (Cloud)
 
@@ -147,7 +147,7 @@ Higher-quality output using cloud-hosted models:
 - **Same workflow**: Identical 9-step pipeline, just a different backend
 - **OpenAI-compatible**: Works with any Microsoft Foundry deployment
 
-> Get started at [foundry.microsoft.com](https://foundry.microsoft.com/) — see [Cloud Usage](#cloud-usage)
+> Get started at [foundry.microsoft.com](https://foundry.microsoft.com/)   see [Cloud Usage](#cloud-usage)
 
 ### GitHub Copilot SDK
 
@@ -158,7 +158,7 @@ Agentic workflows using the official [`@github/copilot-sdk`](https://github.com/
 - **Tool-calling**: Define custom tools the agent can invoke during generation
 - **Multiple models**: Access GPT-4o, Claude Sonnet, and more via GitHub Copilot
 
-> Requires: `npm install -g @github/copilot` — see [Copilot SDK Usage](#copilot-sdk-usage)
+> Requires: `npm install -g @github/copilot`   see [Copilot SDK Usage](#copilot-sdk-usage)
 
 ### What the Copilot Agent Does
 
@@ -175,7 +175,7 @@ This project uses the official [`@github/copilot-sdk`](https://github.com/github
 
 ### Copilot Tool-Calling Pattern
 
-The orchestrator (`src/orchestrator.ts`) implements the Copilot Extensions **tool-calling pattern** — each capability is defined as a discrete tool with a name, description, typed parameters, and an async handler:
+The orchestrator (`src/orchestrator.ts`) implements the Copilot Extensions **tool-calling pattern**   each capability is defined as a discrete tool with a name, description, typed parameters, and an async handler:
 
 ```typescript
 // OrchestratorTool interface mirrors the Copilot Extensions tool schema
@@ -199,7 +199,7 @@ Seven tools are registered for the orchestration session:
 | `writeDoc` | Write a documentation file to the output directory |
 | `runCommand` | Execute a shell command in the repository context |
 
-This mirrors how Copilot Extensions expose capabilities to the LLM — each tool is self-describing and independently invocable, enabling the agent to compose multi-step workflows.
+This mirrors how Copilot Extensions expose capabilities to the LLM   each tool is self-describing and independently invocable, enabling the agent to compose multi-step workflows.
 
 ### Agent Skill Structure
 
@@ -213,11 +213,11 @@ compatibility: Works with any Git repository...
 ---
 ```
 
-Skills are activated by natural-language trigger phrases (e.g., *"Create onboarding pack for this repo"*) and include quality gates, prompt templates, and validation checklists — so Copilot can autonomously generate and verify output.
+Skills are activated by natural-language trigger phrases (e.g., *"Create onboarding pack for this repo"*) and include quality gates, prompt templates, and validation checklists   so Copilot can autonomously generate and verify output.
 
 ### Workflow Session
 
-The 9-step generation pipeline runs as a **Copilot SDK-style session** — a stateful sequence of tool invocations with progress tracking, error recovery, and structured output:
+The 9-step generation pipeline runs as a **Copilot SDK-style session**   a stateful sequence of tool invocations with progress tracking, error recovery, and structured output:
 
 1. Check inference endpoint → 2. Scan repo → 3. Analyze files → 4. Architecture → 5. Tasks → 6. Diagram → 7. Compile → 8. Microsoft Learn validation → 9. Write files
 
@@ -225,14 +225,14 @@ Each step reports progress via a callback (`ProgressCallback`), enabling real-ti
 
 ### Copilot Instructions
 
-The project includes `.github/copilot-instructions.md` which configures GitHub Copilot's behavior when working in this repository — linking to skills, defining workflows, and setting up the Microsoft Learn MCP integration.
+The project includes `.github/copilot-instructions.md` which configures GitHub Copilot's behavior when working in this repository   linking to skills, defining workflows, and setting up the Microsoft Learn MCP integration.
 
 ## CLI Usage
 
 ### Foundry Local (Default)
 
 ```bash
-# Basic usage — any GitHub URL or local path
+# Basic usage   any GitHub URL or local path
 npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator
 
 # With options
@@ -304,38 +304,38 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### Screenshots
 
-**Home — Foundry Local provider with model selection and live status:**
+**Home   Foundry Local provider with model selection and live status:**
 
 <p align="center">
-  <img src="docs/images/web-ui-home.png" alt="Web UI — Foundry Local selected with model dropdown and status panel" width="700">
+  <img src="docs/images/web-ui-home.png" alt="Web UI   Foundry Local selected with model dropdown and status panel" width="700">
 </p>
 
-**Cloud provider — Microsoft Foundry with endpoint, model, and API key status:**
+**Cloud provider   Microsoft Foundry with endpoint, model, and API key status:**
 
 <p align="center">
-  <img src="docs/images/web-ui-cloud.png" alt="Web UI — Microsoft Foundry Cloud provider with gpt-5.2 status" width="700">
+  <img src="docs/images/web-ui-cloud.png" alt="Web UI   Microsoft Foundry Cloud provider with gpt-5.2 status" width="700">
 </p>
 
-**Form filled — ready to generate onboarding docs for a GitHub repository:**
+**Form filled   ready to generate onboarding docs for a GitHub repository:**
 
 <p align="center">
-  <img src="docs/images/web-ui-form-filled.png" alt="Web UI — form filled with Azure-Samples repo URL and model selected" width="700">
+  <img src="docs/images/web-ui-form-filled.png" alt="Web UI   form filled with Azure-Samples repo URL and model selected" width="700">
 </p>
 
-**Step-by-step progress — real-time tracking of the 9-step generation pipeline:**
+**Step-by-step progress   real-time tracking of the 9-step generation pipeline:**
 
 <p align="center">
-  <img src="docs/images/web-ui-progress.png" alt="Web UI — progress tracker showing steps 1-3 completed, step 4 running" width="700">
+  <img src="docs/images/web-ui-progress.png" alt="Web UI   progress tracker showing steps 1-3 completed, step 4 running" width="700">
 </p>
 
 <p align="center">
-  <img src="docs/images/web-ui-progress-mid.png" alt="Web UI — mid-progress with 6 steps completed" width="700">
+  <img src="docs/images/web-ui-progress-mid.png" alt="Web UI   mid-progress with 6 steps completed" width="700">
 </p>
 
-**Generation complete — all steps done with generated files listed for preview/download:**
+**Generation complete   all steps done with generated files listed for preview/download:**
 
 <p align="center">
-  <img src="docs/images/web-ui-complete.png" alt="Web UI — all 9 steps completed with generated files" width="700">
+  <img src="docs/images/web-ui-complete.png" alt="Web UI   all 9 steps completed with generated files" width="700">
 </p>
 
 **Web UI Features:**
@@ -368,13 +368,13 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Demo & Benchmarking
 
-All demo output lives in [`docs/demos/`](docs/demos/) and was generated from a single repository: [Azure-Samples/chat-with-your-data-solution-accelerator](https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator) — a popular RAG pattern accelerator with 1.2k+ stars, Python backend, TypeScript frontend, Bicep infrastructure, and 34+ contributors.
+All demo output lives in [`docs/demos/`](docs/demos/) and was generated from a single repository: [Azure-Samples/chat-with-your-data-solution-accelerator](https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator)   a popular RAG pattern accelerator with 1.2k+ stars, Python backend, TypeScript frontend, Bicep infrastructure, and 34+ contributors.
 
 <p align="center">
   <img src="docs/images/sample-repo-github.png" alt="Azure-Samples/chat-with-your-data-solution-accelerator on GitHub" width="700">
 </p>
 
-We ran the generator **four times** against this repository — once per provider/interface combination — to compare output quality, size, and content.
+We ran the generator **four times** against this repository   once per provider/interface combination   to compare output quality, size, and content.
 
 ### Generated Demo Folders
 
@@ -382,12 +382,12 @@ We ran the generator **four times** against this repository — once per provide
 |--------|-----------|----------|-------|---------|
 | [`docscli-local/`](docs/demos/docscli-local/) | CLI | Foundry Local | qwen2.5-coder-1.5b | `npx tsx src/index.ts <url> --output docs/demos/docscli-local` |
 | [`docsweblocal/`](docs/demos/docsweblocal/) | Web UI | Foundry Local | qwen2.5-coder-1.5b | Web UI → Foundry Local provider |
-| [`docswebcloud/`](docs/demos/docswebcloud/) | Web UI | Azure AI Foundry | gpt-5.2 | Web UI → Cloud provider |
+| [`docswebcloud/`](docs/demos/docswebcloud/) | Web UI | Microsoft Foundry | gpt-5.2 | Web UI → Cloud provider |
 | [`docswebgithub/`](docs/demos/docswebgithub/) | Web UI | GitHub Copilot SDK | Copilot model | Web UI → Copilot SDK provider |
 
 ### Benchmark: Output Size by Provider
 
-File sizes in **bytes** — larger LLM-generated files generally indicate richer, more detailed content.
+File sizes in **bytes**   larger LLM-generated files generally indicate richer, more detailed content.
 
 | File | CLI + Local | Web + Local | Web + Cloud (gpt-5.2) | Web + Copilot SDK |
 |------|------------:|------------:|----------------------:|------------------:|
@@ -403,14 +403,14 @@ File sizes in **bytes** — larger LLM-generated files generally indicate richer
 
 | File | What it tells you |
 |------|-------------------|
-| **ONBOARDING.md** | Architecture depth — how well the LLM understands the repo's structure, components, and key flows |
-| **RUNBOOK.md** | Build/run/test commands — deterministic (not LLM-generated), so identical across providers |
-| **TASKS.md** | Starter-task quality — repo-specific acceptance criteria, hints, and learning objectives |
-| **AGENTS.md** | Agent config — deterministic skills, MCP servers, and workflows extracted from repo metadata |
-| **diagram.mmd** | Diagram complexity — number of Mermaid nodes, subgraphs, and labeled edges |
-| **VALIDATION.md** | Microsoft Learn queries — deterministic, generated from detected Microsoft technologies |
+| **ONBOARDING.md** | Architecture depth   how well the LLM understands the repo's structure, components, and key flows |
+| **RUNBOOK.md** | Build/run/test commands   deterministic (not LLM-generated), so identical across providers |
+| **TASKS.md** | Starter-task quality   repo-specific acceptance criteria, hints, and learning objectives |
+| **AGENTS.md** | Agent config   deterministic skills, MCP servers, and workflows extracted from repo metadata |
+| **diagram.mmd** | Diagram complexity   number of Mermaid nodes, subgraphs, and labeled edges |
+| **VALIDATION.md** | Microsoft Learn queries   deterministic, generated from detected Microsoft technologies |
 
-> **Key insight:** AGENTS.md, RUNBOOK.md, and VALIDATION.md are identical across all providers — they are generated deterministically from repo metadata, not by the LLM. The LLM-generated files (ONBOARDING.md, TASKS.md, diagram.mmd) show the real quality differences. Cloud and Copilot SDK produce **23–29% more content** than the local 1.5B model.
+> **Key insight:** AGENTS.md, RUNBOOK.md, and VALIDATION.md are identical across all providers   they are generated deterministically from repo metadata, not by the LLM. The LLM-generated files (ONBOARDING.md, TASKS.md, diagram.mmd) show the real quality differences. Cloud and Copilot SDK produce **23–29% more content** than the local 1.5B model.
 
 ### Quality Review
 
@@ -418,20 +418,20 @@ File sizes in **bytes** — larger LLM-generated files generally indicate richer
 
 Each provider identified the same repo differently:
 
-| Dimension | Foundry Local (1.5B) | Azure AI Foundry (gpt-5.2) | GitHub Copilot SDK |
+| Dimension | Foundry Local (1.5B) | Microsoft Foundry (gpt-5.2) | GitHub Copilot SDK |
 |-----------|---------------------|---------------------------|-------------------|
 | **Pattern detected** | "Monolithic" | "Monorepo" | "Serverless" |
 | **Component count** | 5 (generic names) | 10 (directory-mapped table) | 14 (directory-mapped table with purpose) |
 | **Key interactions** | 3 bullet points, generic | 3 numbered items with exact file paths | Detailed multi-tier description with orchestration strategies |
 | **Architecture depth** | High-level only | Component table with subgraphs | Full multi-tier breakdown: UI layer, processing layer, infra, data |
 
-**Verbatim — Foundry Local** classified the architecture as:
+**Verbatim   Foundry Local** classified the architecture as:
 > *"The project is structured as a monolithic application, where all components are tightly coupled and reside in a single codebase."*
 
-**Verbatim — Azure AI Foundry** identified it as a monorepo:
+**Verbatim   Microsoft Foundry** identified it as a monorepo:
 > *"This project is a single repository that contains multiple deployable parts: a Python backend (including an Azure Functions batch/ingestion workload and an admin UI), a separate TypeScript/Vite frontend web app, and an optional Microsoft Teams extension."*
 
-**Verbatim — GitHub Copilot SDK** went deepest:
+**Verbatim   GitHub Copilot SDK** went deepest:
 > *"This is an Azure-native RAG (Retrieval Augmented Generation) solution accelerator using a serverless architecture. The system enables conversational search over user documents by combining Azure OpenAI for LLM capabilities with Azure AI Search for vector retrieval."*
 
 #### Component Diagram Quality (diagram.mmd)
@@ -439,10 +439,10 @@ Each provider identified the same repo differently:
 | Provider | Nodes | Subgraphs | Edge Labels | Size |
 |----------|------:|----------:|:-----------:|-----:|
 | Foundry Local | 10 | 0 | No | 285 B |
-| Azure AI Foundry | 12 | 3 | No | 733 B |
+| Microsoft Foundry | 12 | 3 | No | 733 B |
 | GitHub Copilot SDK | 14 | 5 | Yes | 1,393 B |
 
-**Verbatim — Foundry Local** produced a flat graph with raw directory/language names:
+**Verbatim   Foundry Local** produced a flat graph with raw directory/language names:
 ```mermaid
 graph TD
     code --> data
@@ -452,7 +452,7 @@ graph TD
     Bicep --> tests
 ```
 
-**Verbatim — Azure AI Foundry** added meaningful subgraphs:
+**Verbatim   Microsoft Foundry** added meaningful subgraphs:
 ```mermaid
 graph TD
   subgraph DevelopmentEnvironment[Development Environment]
@@ -465,7 +465,7 @@ graph TD
   end
 ```
 
-**Verbatim — GitHub Copilot SDK** produced the richest diagram with labeled edges and component-level detail:
+**Verbatim   GitHub Copilot SDK** produced the richest diagram with labeled edges and component-level detail:
 ```mermaid
 graph TD
     subgraph UserInterface["User Interface Layer"]
@@ -482,20 +482,20 @@ graph TD
 
 Every provider generated 10 tasks with learning objectives. The depth difference is dramatic:
 
-**Verbatim — Foundry Local** tasks are generic templates:
+**Verbatim   Foundry Local** tasks are generic templates:
 > 🟡 **Task 1: Review Code Structure** \
 > *Learning: Understand file organization and directory structure* \
 > Criteria: "Know the location of the `api`, `database`, and `orchestrator` directories"
 
-Note: The local model also produced **parsing artifacts** — field labels bled into content (e.g., `Skills: File navigation` appearing inside related-files lists).
+Note: The local model also produced **parsing artifacts**   field labels bled into content (e.g., `Skills: File navigation` appearing inside related-files lists).
 
-**Verbatim — Azure AI Foundry** tasks reference exact files and real workflows:
+**Verbatim   Microsoft Foundry** tasks reference exact files and real workflows:
 > 🟢 **Task 1: Trace the Chat Request Path (Frontend → Backend)** \
 > *Learning: Code navigation in a monorepo; understanding API boundaries between TypeScript frontend and Python backend* \
 > Criteria: "Identifies the exact frontend function(s) that issue the chat request" \
 > Hints: "Search for the chat endpoint path in `code/frontend/src/api/*`"
 
-**Verbatim — GitHub Copilot SDK** tasks tie to real engineering concepts:
+**Verbatim   GitHub Copilot SDK** tasks tie to real engineering concepts:
 > 🟢 **Task 1: Explore the RAG Architecture Documentation** \
 > *Learning: Understanding RAG (Retrieval Augmented Generation) patterns and Azure service integration* \
 > Criteria: "Can explain the role of Azure OpenAI and Azure AI Search" \
@@ -503,7 +503,7 @@ Note: The local model also produced **parsing artifacts** — field labels bled 
 
 #### Task Difficulty Distribution
 
-| Difficulty | Foundry Local | Azure AI Foundry | GitHub Copilot SDK |
+| Difficulty | Foundry Local | Microsoft Foundry | GitHub Copilot SDK |
 |------------|:------------:|:----------------:|:------------------:|
 | 🟢 Easy | 5 | 3 | 3 |
 | 🟡 Medium | 3 | 4 | 4 |
@@ -513,7 +513,7 @@ Cloud and Copilot providers produced a more balanced difficulty curve with harde
 
 #### Summary Scorecard
 
-| Dimension | Foundry Local (1.5B) | Azure AI Foundry (gpt-5.2) | GitHub Copilot SDK |
+| Dimension | Foundry Local (1.5B) | Microsoft Foundry (gpt-5.2) | GitHub Copilot SDK |
 |-----------|:-------------------:|:-------------------------:|:-----------------:|
 | Architecture accuracy | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | Task specificity | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
@@ -528,8 +528,8 @@ Cloud and Copilot providers produced a more balanced difficulty curve with harde
 
 | Use Case | Recommended Provider |
 |----------|---------------------|
-| Proprietary code, air-gapped environments | **Foundry Local** — no data leaves your machine |
-| Best output quality, team documentation | **Azure AI Foundry** or **GitHub Copilot SDK** |
+| Proprietary code, air-gapped environments | **Foundry Local**   no data leaves your machine |
+| Best output quality, team documentation | **Microsoft Foundry** or **GitHub Copilot SDK** |
 | Students with Copilot access, no API keys | **GitHub Copilot SDK** |
 | Quick drafts to refine manually | **Foundry Local** (fastest setup, zero cost) |
 | Classroom with mixed setups | Start with **Foundry Local**, upgrade output with cloud if allowed |
@@ -547,7 +547,7 @@ Cloud and Copilot providers produced a more balanced difficulty curve with harde
   Active model: qwen2.5-coder-1.5b-instruct-cuda-gpu:4
 
 [2/9] Scanning repository...
-✓ Found 6 languages — Primary: Python
+✓ Found 6 languages   Primary: Python
 
 [3/9] Analyzing key files...
   Summarized: README.md, package.json, Makefile, pyproject.toml
@@ -613,7 +613,7 @@ This project includes reusable agent skills at `.github/skills/`.
 
 ## Using with VS Code GitHub Copilot Chat
 
-This project ships with **agent skills** and **MCP server configuration** that work directly inside [GitHub Copilot Chat](https://docs.github.com/en/copilot/using-github-copilot/asking-github-copilot-questions-in-your-ide) in VS Code. No CLI or web UI needed — just open the repo and start chatting.
+This project ships with **agent skills** and **MCP server configuration** that work directly inside [GitHub Copilot Chat](https://docs.github.com/en/copilot/using-github-copilot/asking-github-copilot-questions-in-your-ide) in VS Code. No CLI or web UI needed   just open the repo and start chatting.
 
 ### Setup (One-Time)
 
@@ -627,9 +627,9 @@ This project ships with **agent skills** and **MCP server configuration** that w
    npm install
    ```
 
-3. **Enable Agent Mode** — In Copilot Chat, click the mode dropdown (top of chat panel) and select **Agent**. This lets Copilot use the skills, MCP tools, and terminal commands defined in this project.
+3. **Enable Agent Mode**   In Copilot Chat, click the mode dropdown (top of chat panel) and select **Agent**. This lets Copilot use the skills, MCP tools, and terminal commands defined in this project.
 
-4. **MCP server auto-configures** — The `.mcp.json` file at the project root registers the Microsoft Learn MCP server automatically. VS Code picks this up when you open the workspace. You should see `microsoft-learn` listed when you click the **Tools** icon (🔧) in the chat panel.
+4. **MCP server auto-configures**   The `.mcp.json` file at the project root registers the Microsoft Learn MCP server automatically. VS Code picks this up when you open the workspace. You should see `microsoft-learn` listed when you click the **Tools** icon (🔧) in the chat panel.
 
 ### Talking to the Agent Skills
 
@@ -706,19 +706,19 @@ Build an agent skill that teaches about Bicep
 
 When you type a prompt in Copilot Chat (Agent Mode):
 
-1. **Copilot reads** `.github/copilot-instructions.md` — this tells it about the project, available skills, and MCP tools
-2. **Skills activate** based on your prompt — each skill in `.github/skills/` has trigger phrases and step-by-step instructions Copilot follows
-3. **MCP tools fire** when Copilot needs external data — e.g., `microsoft_docs_search` queries learn.microsoft.com in real-time
+1. **Copilot reads** `.github/copilot-instructions.md`   this tells it about the project, available skills, and MCP tools
+2. **Skills activate** based on your prompt   each skill in `.github/skills/` has trigger phrases and step-by-step instructions Copilot follows
+3. **MCP tools fire** when Copilot needs external data   e.g., `microsoft_docs_search` queries learn.microsoft.com in real-time
 4. **Copilot uses the terminal** to run commands like `npx tsx src/index.ts` or `npm run build` when the skill requires it
-5. **Files are created/edited** directly in your workspace — you can review changes in the source control panel
+5. **Files are created/edited** directly in your workspace   you can review changes in the source control panel
 
 ### Tips
 
-- **Be specific** — "Create onboarding pack for `https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator`" works better than "make docs"
+- **Be specific**   "Create onboarding pack for `https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator`" works better than "make docs"
 - **Check the Tools icon** (🔧) in Chat to verify `microsoft-learn` MCP server is connected
-- **Use Agent Mode**, not Ask or Edit mode — skills and MCP tools only work in Agent Mode
-- **Review generated files** before committing — AI output should always be verified
-- **Combine skills** — ask Copilot to generate an onboarding pack and then validate it against Microsoft Learn in the same conversation
+- **Use Agent Mode**, not Ask or Edit mode   skills and MCP tools only work in Agent Mode
+- **Review generated files** before committing   AI output should always be verified
+- **Combine skills**   ask Copilot to generate an onboarding pack and then validate it against Microsoft Learn in the same conversation
 
 ## Microsoft Learn MCP Server
 
