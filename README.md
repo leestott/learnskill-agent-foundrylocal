@@ -70,47 +70,50 @@ npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution
 ## Architecture
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                     CLI (index.ts)                     │
-│              Commander argument parsing                │
-└─────────────────────────┬──────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  Interfaces                                                      │
+│  ┌──────────────────────┐    ┌──────────────────────┐           │
+│  │    CLI (index.ts)     │    │  Web UI (server.ts)  │           │
+│  │  Commander parsing    │    │  HTTP + SSE progress │           │
+│  └──────────┬───────────┘    └──────────┬───────────┘           │
+│             └────────────┬──────────────┘                        │
+│                          ▼                                       │
+│  ┌──────────────────────────────────────────────────────┐       │
+│  │              Orchestrator (orchestrator.ts)           │       │
+│  │  9-step pipeline · tool-calling pattern · progress CB│       │
+│  ├───────┬──────────────┬───────────────┬───────────────┤       │
+│  │       ▼              ▼               ▼               │       │
+│  │ RepoScanner    LocalModelClient  CopilotSdkClient    │       │
+│  │ (repoScanner   (localModelClient (copilotSdkClient   │       │
+│  │   .ts)           .ts)              .ts)               │       │
+│  │ · Languages    · Foundry Local   · @github/copilot   │       │
+│  │ · Build sys    · Azure Foundry     -sdk (v0.1.23)    │       │
+│  │ · Deps         · OpenAI-compat   · BYOK providers    │       │
+│  │ · Structure    · File summary    · Session mgmt      │       │
+│  └───────┴──────────────┴───────────────┴───────────────┘       │
+│                                                                  │
+│  Shared: types.ts (interfaces) · validation.ts (input safety)   │
+└──────────────────────────────────────────────────────────────────┘
                           │
-┌─────────────────────────▼──────────────────────────────┐
-│                 Orchestrator                            │
-│        Copilot SDK-style workflow coordination         │
-├────────────────────┬───────────────────────────────────┤
-│                    │                                    │
-│  ┌─────────────────▼─────────────────┐                 │
-│  │         RepoScanner               │                 │
-│  │  - Language detection             │                 │
-│  │  - Build system analysis          │                 │
-│  │  - Dependency extraction          │                 │
-│  │  - Structure mapping              │                 │
-│  └───────────────────────────────────┘                 │
-│                                                         │
-│  ┌───────────────────────────────────┐                 │
-│  │       LocalModelClient            │                 │
-│  │  - Foundry Local API calls        │    ◄───────┐   │
-│  │  - Microsoft Foundry (cloud)       │            │   │
-│  │  - File summarization             │   Foundry  │   │
-│  │  - Architecture analysis          │    Local    │   │
-│  │  - Task generation                │      or    │   │
-│  └───────────────────────────────────┘    Azure   │   │
-│                                           Cloud   │   │
-│  ┌───────────────────────────────────┐            │   │
-│  │       CopilotSdkClient            │            │   │
-│  │  - GitHub Copilot SDK             │   Copilot  │   │
-│  │  - BYOK provider support          │    CLI     │   │
-│  │  - Agentic session management     │            │   │
-│  └───────────────────────────────────┘            │   │
-│                                                   │   │
-└───────────────────────────────────────────┬───────┘   │
-                                            │           │
-                    OpenAI-compatible API ───────────────┘
-                    Local: http://localhost:PORT/v1/
-                    Cloud: https://<project>.services.foundry.microsoft.com/v1/
-                    SDK:   Copilot CLI (JSON-RPC)
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+   Foundry Local    Azure AI Foundry   Copilot CLI
+   localhost:PORT   *.cognitiveservices  JSON-RPC
+   (on-device GPU)  .azure.com (cloud)  (GitHub auth)
 ```
+
+The project has **8 source files** in `src/`:
+
+| File | Role |
+|------|------|
+| `index.ts` | CLI entry point — Commander argument parsing |
+| `server.ts` | Web UI — HTTP server with SSE progress streaming |
+| `orchestrator.ts` | 9-step generation pipeline with tool-calling pattern |
+| `localModelClient.ts` | LLM client for Foundry Local and Azure AI Foundry (OpenAI-compatible) |
+| `copilotSdkClient.ts` | LLM client for GitHub Copilot SDK (`@github/copilot-sdk`) |
+| `repoScanner.ts` | Repository analysis — languages, deps, build systems, structure |
+| `types.ts` | Shared TypeScript interfaces |
+| `validation.ts` | Input validation and security checks |
 
 ## Hybrid AI Approach
 
@@ -311,7 +314,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
   <img src="docs/images/web-ui-form-filled.png" alt="Web UI — form filled with Azure-Samples repo URL and model selected" width="700">
 </p>
 
-**Step-by-step progress — real-time tracking of the 10-step generation pipeline:**
+**Step-by-step progress — real-time tracking of the 9-step generation pipeline:**
 
 <p align="center">
   <img src="docs/images/web-ui-progress.png" alt="Web UI — progress tracker showing steps 1-3 completed, step 4 running" width="700">
@@ -324,7 +327,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 **Generation complete — all steps done with generated files listed for preview/download:**
 
 <p align="center">
-  <img src="docs/images/web-ui-complete.png" alt="Web UI — all 10 steps completed with generated files" width="700">
+  <img src="docs/images/web-ui-complete.png" alt="Web UI — all 9 steps completed with generated files" width="700">
 </p>
 
 **Web UI Features:**
@@ -376,17 +379,30 @@ We ran the generator **four times** against this repository — once per provide
 
 ### Benchmark: Output Size by Provider
 
+File sizes in **bytes** — larger LLM-generated files generally indicate richer, more detailed content.
+
 | File | CLI + Local | Web + Local | Web + Cloud (gpt-5.2) | Web + Copilot SDK |
 |------|------------:|------------:|----------------------:|------------------:|
-| ONBOARDING.md | 3,937 B | 3,937 B | **6,020 B** | **6,874 B** |
-| RUNBOOK.md | 2,358 B | 2,358 B | 2,358 B | 2,358 B |
-| TASKS.md | 8,158 B | 8,158 B | **10,078 B** | **9,714 B** |
-| AGENTS.md | 2,323 B | 2,323 B | 2,323 B | 2,323 B |
-| diagram.mmd | 285 B | 285 B | 733 B | **1,393 B** |
-| VALIDATION.md | 2,549 B | 2,549 B | 2,549 B | 2,549 B |
-| **Total** | **19,610 B** | **19,610 B** | **24,061 B** | **25,211 B** |
+| ONBOARDING.md | 3,937 | 3,937 | **6,020** | **6,874** |
+| RUNBOOK.md | 2,358 | 2,358 | 2,358 | 2,358 |
+| TASKS.md | 8,158 | 8,158 | **10,078** | **9,714** |
+| AGENTS.md | 2,323 | 2,323 | 2,323 | 2,323 |
+| diagram.mmd | 285 | 285 | 733 | **1,393** |
+| VALIDATION.md | 2,549 | 2,549 | 2,549 | 2,549 |
+| **Total (bytes)** | **19,610** | **19,610** | **24,061** | **25,211** |
 
-> **Note:** AGENTS.md, RUNBOOK.md, and VALIDATION.md are identical across all providers — they are generated deterministically from repo metadata, not by the LLM. The LLM-generated files (ONBOARDING.md, TASKS.md, diagram.mmd) show the real quality differences.
+#### What each file measures
+
+| File | What it tells you |
+|------|-------------------|
+| **ONBOARDING.md** | Architecture depth — how well the LLM understands the repo's structure, components, and key flows |
+| **RUNBOOK.md** | Build/run/test commands — deterministic (not LLM-generated), so identical across providers |
+| **TASKS.md** | Starter-task quality — repo-specific acceptance criteria, hints, and learning objectives |
+| **AGENTS.md** | Agent config — deterministic skills, MCP servers, and workflows extracted from repo metadata |
+| **diagram.mmd** | Diagram complexity — number of Mermaid nodes, subgraphs, and labeled edges |
+| **VALIDATION.md** | Microsoft Learn queries — deterministic, generated from detected Microsoft technologies |
+
+> **Key insight:** AGENTS.md, RUNBOOK.md, and VALIDATION.md are identical across all providers — they are generated deterministically from repo metadata, not by the LLM. The LLM-generated files (ONBOARDING.md, TASKS.md, diagram.mmd) show the real quality differences. Cloud and Copilot SDK produce **23–29% more content** than the local 1.5B model.
 
 ### Quality Review
 
