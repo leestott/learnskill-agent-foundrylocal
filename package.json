@@ -1,7 +1,7 @@
 {
   "name": "repo-onboarding-pack",
   "version": "1.0.0",
-  "description": "Hybrid AI tool to generate engineering onboarding packs using Foundry Local + Copilot SDK",
+  "description": "Hybrid AI tool to generate engineering onboarding packs using Foundry Local + GitHub Copilot SDK + MCP Server",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -18,16 +18,17 @@
   },
   "keywords": [
     "onboarding",
-    "copilot",
+    "mcp",
     "foundry-local",
+    "copilot-sdk",
     "agent-skill",
-    "developer-tools"
+    "developer-tools",
+    "github-copilot"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.30.0",
-    "@copilot-extensions/preview-sdk": "^5.0.0",
+    "@github/copilot-sdk": "^0.1.23",
     "commander": "^12.1.0",
     "dotenv": "^17.2.4",
     "glob": "^11.0.0",

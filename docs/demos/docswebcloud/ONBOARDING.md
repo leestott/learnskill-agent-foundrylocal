@@ -11,28 +11,28 @@ Run `npm install` to install dependencies, then `npm run dev` or `npm start` to 
 ## Architecture
 
 ### Pattern: Monorepo
-This repository is a single source tree that contains multiple deployable parts of an end-to-end “chat with your data” solution: a Python backend, a separate web frontend, an admin UI, and an Azure Functions-based batch/ingestion subsystem. It also includes infrastructure-as-code for Azure provisioning (Bicep), containerization assets (Dockerfiles and compose), and multiple layers of automated testing (unit/functional/e2e/UI), all coordinated via the root `Makefile` and GitHub Actions workflows.
+This project is a single repository that contains multiple deployable parts: a Python backend (including an Azure Functions batch/ingestion workload and an admin UI), a separate TypeScript/Vite frontend web app, and an optional Microsoft Teams extension. Infrastructure-as-code (Azure Bicep) and deployment automation (Makefile, scripts, Docker assets, GitHub Actions) live alongside the application code, enabling end-to-end provisioning and CI/testing from one place.
 
-The runtime architecture is a web application where the **frontend** (in `code/frontend/`) calls into the **backend** (in `code/backend/`) for conversational/RAG operations and related APIs (e.g., chat history). Data ingestion and processing is supported by a **batch/functions** area (`code/backend/batch/`) that is structured like an Azure Functions app (`function_app.py`, `host.json`) and includes scripts for embedding and processing content. Deployment is driven by `infra/` (Bicep modules and prompt-flow assets) and can be run locally via `docker/` and developer tooling in `.devcontainer/` and `scripts/`.
+The `code/` area is the core application: a backend that exposes chat/history capabilities and batch processing for ingestion/embedding, plus a standalone frontend that calls backend APIs. The repo also includes sample documents under `data/` to exercise ingestion and RAG flows, and multiple test suites (Python unit/functional, Cypress UI, and an LLM evaluator) to validate behavior across components.
+
+**Key interactions**
+1. `code/frontend/src/api/*` calls into the Python backend entrypoints (`code/app.py`, `code/create_app.py`) to drive the chat experience and related operations.
+2. `code/backend/batch/function_app.py` and related batch scripts process/ingest content (e.g., embedding/indexing workflows) and integrate with the rest of the backend used by the chat app.
+3. `infra/` (Bicep) provisions the Azure resources required by the backend/function workloads and is driven by automation in `Makefile` and `scripts/` (and supported by CI workflows in `.github/workflows/`).
 
 ### Components
 | Component | Directory | Purpose |
 |-----------|-----------|---------|
-| Dev container setup | `.devcontainer/` | Reproducible development environment (Dockerfile + setup scripts). |
-| GitHub automation | `.github/` | CI/CD workflows and repo governance templates/config. |
-| Application code | `code/` | Main product code: backend, frontend, and in-repo tests plus app entrypoints (`app.py`, `create_app.py`). |
-| Sample/source documents | `data/` | Example PDFs/docs used for ingestion and testing the solution. |
-| Containerization | `docker/` | Dockerfiles and `docker-compose.yml` for running components locally/packaging images. |
-| Documentation | `docs/` | Architecture/design docs, ADRs, guides, and images; includes a notebook spike. |
-| Teams extension | `extensions/` | Microsoft Teams app/bot package, config, and infra for Teams integration. |
-| Infrastructure as code | `infra/` | Azure provisioning templates (Bicep), prompt-flow deployment assets, and workbooks. |
-| Utility scripts | `scripts/` | Helper scripts for env parsing, quota checks, packaging, and DB/table setup. |
-| Test suites | `tests/` | Higher-level tests: e2e test harness, Cypress UI integration tests, and an LLM evaluator tool. |
-
-**Key interactions**
-1. `code/frontend/src/api/` communicates with the Python app in `code/` (entrypoints `app.py` / `create_app.py`) to run chat/RAG flows and retrieve/store chat history (evidenced by `code/backend/api/chat_history.py` and frontend API client code).
-2. `code/backend/batch/` (Azure Functions-style app) performs ingestion/processing tasks (e.g., `add_url_embeddings.py`, `batch_start_processing.py`) that prepare data used by the backend’s conversational responses.
-3. `infra/` provisions the Azure resources and deployment configuration that the runtime components depend on, while `docker/` and `scripts/` support local runs and packaging; `tests/` exercises the deployed/local system via functional/e2e/UI test layers.
+| Dev container setup | `.devcontainer/` | Reproducible local development environment (Dockerfile/devcontainer config and setup script). |
+| GitHub automation | `.github/` | Issue templates and CI/CD workflows (including Bicep auditing and link checking). |
+| Application code | `code/` | Main solution code: Python backend (API, batch/Azure Functions, admin UI) and the TypeScript frontend, plus Python tests and app entrypoints. |
+| Sample content | `data/` | Example documents (PDF/DOCX) used for ingestion and demo scenarios. |
+| Containerization | `docker/` | Dockerfiles and docker-compose configuration for running components locally/packaged. |
+| Documentation | `docs/` | Architecture/design notes (ADRs), guides, images, and spikes (including a notebook). |
+| Teams extension | `extensions/` | Microsoft Teams app/bot package, configuration, and its own infra/scripts. |
+| Infrastructure as code | `infra/` | Azure Bicep modules and prompt-flow deployment assets for provisioning the solution. |
+| Utility scripts | `scripts/` | Helper scripts for quota checks, packaging, env parsing, and data setup (e.g., Postgres tables). |
+| Additional test suites | `tests/` | End-to-end tests, Cypress UI integration tests, and an LLM evaluation harness. |
 
 ## Key Flows
 
@@ -51,15 +51,15 @@ Build the project using npm
 
 ```mermaid
 graph TD
-  RepositoryRoot[Repository Root] --> DevContainerDir[.devcontainer/]
-  RepositoryRoot --> CodeDir[code/]
-  RepositoryRoot --> DataDir[data/]
-  RepositoryRoot --> DockerDir[docker/]
-  RepositoryRoot --> DocsDir[docs/]
-  RepositoryRoot --> ExtensionsDir[extensions/]
-  RepositoryRoot --> InfraDir[infra/]
-  RepositoryRoot --> ScriptsDir[scripts/]
-  RepositoryRoot --> TestsDir[tests/]
+  RepoRoot[Repository Root] --> DevContainerDir[.devcontainer/]
+  RepoRoot --> CodeDir[code/]
+  RepoRoot --> DataDir[data/]
+  RepoRoot --> DockerDir[docker/]
+  RepoRoot --> DocsDir[docs/]
+  RepoRoot --> ExtensionsDir[extensions/]
+  RepoRoot --> InfraDir[infra/]
+  RepoRoot --> ScriptsDir[scripts/]
+  RepoRoot --> TestsDir[tests/]
 
   subgraph DevelopmentEnvironment[Development Environment]
     DevContainerDir --> DockerDir
@@ -68,17 +68,44 @@ graph TD
 
   subgraph ApplicationAndData[Application & Data]
     CodeDir --> DataDir
-    CodeDir --> TestsDir
-    ScriptsDir --> CodeDir
     ScriptsDir --> DataDir
+    TestsDir --> CodeDir
   end
 
-  subgraph InfrastructureAndDocs[Infrastructure & Documentation]
+  subgraph DeploymentAndDocumentation[Deployment & Documentation]
     InfraDir --> DockerDir
-    InfraDir --> DocsDir
     DocsDir --> CodeDir
   end
 ```
+
+## For Instructors
+
+This section summarises the project for instructors, supervisors, and mentors overseeing student onboarding.
+
+### Project Complexity
+
+- **Dependency count:** 0
+- **Key flows:** 1
+- **Estimated complexity:** Low
+
+### Learning Outcomes
+
+Students working through the onboarding tasks will learn to:
+
+1. Navigate and understand an unfamiliar codebase
+2. Set up and run a real-world development environment
+3. Read and write automated tests
+4. Contribute code through the pull request workflow
+5. Use GitHub Copilot as a learning and productivity tool
+
+### Suggested Session Plan
+
+| Session | Focus | Tasks |
+|---------|-------|-------|
+| 1 | Orientation & setup | Tasks 1-3 (easy) |
+| 2 | First contribution | Tasks 4-5 (easy-medium) |
+| 3 | Deeper work | Tasks 6-8 (medium) |
+| 4 | Independent feature | Tasks 9-10 (hard) |
 
 ## Microsoft Technology References
 

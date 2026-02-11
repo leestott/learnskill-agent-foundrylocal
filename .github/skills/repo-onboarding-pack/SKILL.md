@@ -44,6 +44,7 @@ This skill uses the Microsoft Learn MCP Server to verify Microsoft technology de
 ### Related Skills
 
 Install these companion skills for best results:
+- **[repo-agents-pack](../repo-agents-pack/SKILL.md)** — AGENTS.md generation guidance (skills, MCP servers, workflows)
 - **[microsoft-docs](../microsoft-docs/SKILL.md)** — Concept lookups, tutorials, architecture guides
 - **[microsoft-code-reference](../microsoft-code-reference/SKILL.md)** — API verification, code samples, error troubleshooting
 - **[microsoft-skill-creator](../microsoft-skill-creator/SKILL.md)** — Create new skills for Microsoft technologies found in scanned repos
@@ -65,7 +66,8 @@ This skill activates when users say things like:
 |----------|---------|-----------------|
 | `ONBOARDING.md` | Architecture overview, key flows, dependency map | 5 sections, 200+ words |
 | `RUNBOOK.md` | How to build, run, test + troubleshooting | All prerequisites detected, working commands |
-| `TASKS.md` | 10 starter tasks with acceptance criteria | Exactly 10 tasks, 3 easy / 4 medium / 3 hard |
+| `TASKS.md` | 10 starter tasks with acceptance criteria and learning objectives | Exactly 10 tasks, 3 easy / 4 medium / 3 hard |
+| `AGENTS.md` | Agent skills, MCP servers, workflows, Copilot usage guide | 1+ skill per language, microsoft-learn MCP, 1+ workflow |
 | `diagram.mmd` | Mermaid component diagram | 8+ nodes, valid Mermaid syntax only |
 | `VALIDATION.md` | Microsoft Learn technology validation report | Auto-generated when MS tech detected |
 
@@ -235,6 +237,7 @@ Each task MUST follow this exact structure. The LLM must generate all 10 tasks.
 | Total tasks | Exactly 10 |
 | Difficulty split | Tasks 1-3: easy, Tasks 4-7: medium, Tasks 8-10: hard |
 | Acceptance criteria | 2-3 specific, testable criteria per task |
+| Learning objective | One sentence describing what the student will learn |
 | Hints | 1-2 actionable hints referencing real files/patterns |
 | Related files | At least 1 real file path from the scanned repo |
 | Skills | 1-3 skill tags (e.g., documentation, testing, python, azure) |
@@ -245,6 +248,9 @@ Each task MUST follow this exact structure. The LLM must generate all 10 tasks.
 **Difficulty:** {easy|medium|hard} | **Time:** {estimate}
 
 {2-3 sentence description of what to do, referencing actual repo files}
+
+### 🎯 Learning Objective
+{One sentence: what skill or concept the student gains by completing this task}
 
 ### Acceptance Criteria
 - [ ] {Specific testable criterion 1}
@@ -489,18 +495,25 @@ Before completing, verify:
 - [ ] ONBOARDING.md describes actual architecture (not generic)
 - [ ] ONBOARDING.md overview names the specific technologies detected
 - [ ] ONBOARDING.md architecture references real directories from the scan
+- [ ] ONBOARDING.md includes "For Instructors" section with complexity and learning outcomes
 - [ ] RUNBOOK.md lists every detected language/runtime as a prerequisite
 - [ ] RUNBOOK.md commands are real (not "Check project documentation")
 - [ ] RUNBOOK.md troubleshooting is tech-stack-specific
 - [ ] TASKS.md contains exactly 10 tasks with progressive difficulty
+- [ ] TASKS.md each task has a learning objective
 - [ ] TASKS.md tasks reference real files from the repository
 - [ ] TASKS.md acceptance criteria are specific and testable
 - [ ] diagram.mmd contains ONLY valid Mermaid syntax (no prose)
 - [ ] diagram.mmd has 8+ nodes reflecting actual project structure
 - [ ] diagram.mmd renders without errors
+- [ ] AGENTS.md skills match detected languages and build system
+- [ ] AGENTS.md includes microsoft-learn MCP server
+- [ ] AGENTS.md has at least one workflow (onboarding)
+- [ ] AGENTS.md includes "How to Use with GitHub Copilot" section
 - [ ] Microsoft tech details verified via MCP (if applicable)
 
 See [checklist.md](references/checklist.md) for full verification steps.
+See [repo-agents-pack](../repo-agents-pack/SKILL.md) for AGENTS.md-specific quality gates.
 
 ## Example Usage
 
@@ -526,9 +539,10 @@ Agent:
 2. Identify key files and patterns
 3. Use Foundry Local for file summaries (phi-4 or larger recommended)
 4. Generate ONBOARDING.md, RUNBOOK.md, TASKS.md
-5. Create Mermaid diagram
-6. Validate all output against quality gates
-7. If Microsoft tech detected, verify via MCP
+5. Generate AGENTS.md (skills, MCP servers, workflows) — see [repo-agents-pack](../repo-agents-pack/SKILL.md)
+6. Create Mermaid diagram
+7. Validate all output against quality gates
+8. If Microsoft tech detected, verify via MCP
 
 ## References
 

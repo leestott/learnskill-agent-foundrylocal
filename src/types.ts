@@ -60,6 +60,7 @@ export interface OnboardingPack {
   onboarding: OnboardingDoc;
   runbook: RunbookDoc;
   tasks: TasksDoc;
+  agents: AgentsDoc;
   diagram: string; // Mermaid diagram content
   microsoftTechValidation?: MicrosoftTechDetection[];
 }
@@ -139,12 +140,39 @@ export interface TasksDoc {
   tasks: StarterTask[];
 }
 
+export interface AgentsDoc {
+  projectName: string;
+  description: string;
+  skills: AgentSkill[];
+  mcpServers: AgentMcpServer[];
+  workflows: AgentWorkflow[];
+}
+
+export interface AgentSkill {
+  name: string;
+  description: string;
+  triggers: string[];
+}
+
+export interface AgentMcpServer {
+  name: string;
+  url: string;
+  tools: string[];
+}
+
+export interface AgentWorkflow {
+  name: string;
+  description: string;
+  steps: string[];
+}
+
 export interface StarterTask {
   id: number;
   title: string;
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
   estimatedTime: string;
+  learningObjective?: string;
   acceptanceCriteria: string[];
   hints: string[];
   relatedFiles: string[];
@@ -228,6 +256,9 @@ export interface GenerationConfig {
   cloudEndpoint?: string;
   cloudApiKey?: string;
   cloudModel?: string;
+  // GitHub Copilot SDK options
+  useCopilotSdk?: boolean;
+  copilotModel?: string;
   // Progress reporting
   onProgress?: ProgressCallback;
 }

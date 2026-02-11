@@ -7,7 +7,9 @@ import 'dotenv/config';
  * 
  * Generates an engineering onboarding pack using:
  * - Foundry Local for privacy-sensitive local inference
- * - Copilot SDK-style orchestration for multi-step workflows
+ * - GitHub Copilot SDK (@github/copilot-sdk) for agentic workflows
+ * - MCP-compatible orchestration for multi-step workflows
+ * - Microsoft Learn MCP Server for technology validation
  */
 
 import { program } from 'commander';
@@ -36,6 +38,8 @@ program
   .option('--cloud-endpoint <url>', 'Microsoft Foundry cloud endpoint URL')
   .option('--cloud-api-key <key>', 'API key for cloud endpoint (or set FOUNDRY_CLOUD_API_KEY)')
   .option('--cloud-model <name>', 'Cloud model deployment name (default: gpt-4o-mini)')
+  .option('--copilot-sdk', 'Use GitHub Copilot SDK for inference (requires Copilot CLI)', false)
+  .option('--copilot-model <name>', 'Copilot SDK model (default: claude-sonnet-4)')
   .action(async (repo: string | undefined, options) => {
     try {
       // Check status doesn't require repo
@@ -67,6 +71,8 @@ async function run(repo: string, options: {
   cloudEndpoint?: string;
   cloudApiKey?: string;
   cloudModel?: string;
+  copilotSdk?: boolean;
+  copilotModel?: string;
 }): Promise<void> {
   const verbose = options.verbose || false;
 
@@ -118,6 +124,8 @@ async function run(repo: string, options: {
     cloudEndpoint,
     cloudApiKey: cloudApiKey,
     cloudModel,
+    useCopilotSdk: options.copilotSdk,
+    copilotModel: options.copilotModel,
   };
 
   // Run orchestrator
@@ -130,6 +138,7 @@ async function run(repo: string, options: {
   console.log(`   • ${join(outputDir, 'ONBOARDING.md')} - Architecture overview`);
   console.log(`   • ${join(outputDir, 'RUNBOOK.md')} - How to build/run/test`);
   console.log(`   • ${join(outputDir, 'TASKS.md')} - Starter tasks`);
+  console.log(`   • ${join(outputDir, 'AGENTS.md')} - Agent configuration`);
   console.log(`   • ${join(outputDir, 'diagram.mmd')} - Component diagram`);
   console.log('');
 

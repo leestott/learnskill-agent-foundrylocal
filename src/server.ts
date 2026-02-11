@@ -3,6 +3,7 @@ import 'dotenv/config';
  * Web UI Server for Repo Onboarding Pack Generator
  * 
  * Provides a browser-based interface for generating onboarding documentation.
+ * Works with GitHub Copilot Agent Mode for interactive chat-based generation.
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'http';
@@ -27,6 +28,8 @@ interface GenerationRequest {
   cloudApiKey?: string;
   cloudModel?: string;
   useCloud?: boolean;
+  useCopilotSdk?: boolean;
+  copilotModel?: string;
 }
 
 interface StepDetail {
@@ -585,6 +588,8 @@ async function runGeneration(jobId: string, request: GenerationRequest): Promise
       cloudEndpoint: request.cloudEndpoint,
       cloudApiKey: request.cloudApiKey,
       cloudModel: request.cloudModel,
+      useCopilotSdk: request.useCopilotSdk,
+      copilotModel: request.copilotModel,
       onProgress: (info) => {
         // Update current step text and progress
         job.step = `[${info.stepNumber}/${info.totalSteps}] ${info.stepName}`;
@@ -1600,15 +1605,18 @@ function getHtmlPage(): string {
       <form id="generate-form" novalidate>
         <div class="form-group" style="margin-bottom: 1rem;">
           <label style="font-size: 1rem; font-weight: 600;">🔧 AI Provider</label>
-          <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+          <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
             <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
               <input type="radio" name="provider" value="local" checked> 🖥️ Foundry Local
             </label>
             <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
               <input type="radio" name="provider" value="cloud"> ☁️ Microsoft Foundry (Cloud)
             </label>
+            <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+              <input type="radio" name="provider" value="copilot-sdk"> 🤖 GitHub Copilot SDK
+            </label>
           </div>
-          <p class="hint">Choose between privacy-preserving local inference or cloud-hosted models</p>
+          <p class="hint">Choose between local inference, cloud-hosted models, or GitHub Copilot SDK</p>
         </div>
         
         <div id="local-section">
@@ -1696,6 +1704,29 @@ function getHtmlPage(): string {
                 <code style="background: var(--bg-hover); padding: 0.1rem 0.3rem; border-radius: 3px;">FOUNDRY_CLOUD_MODEL</code>
               </p>
             </div>
+          </div>
+        </div>
+        
+        <div id="copilot-sdk-section" style="display: none;">
+        <div class="info-panel" style="border-left: 4px solid #6f42c1;">
+          <div class="info-panel-header">🤖 GitHub Copilot SDK — Agentic AI</div>
+          <div class="info-panel-body">
+            <p>Use the <strong>GitHub Copilot SDK</strong> for agentic workflows via the Copilot CLI. Supports BYOK providers.</p>
+            <div class="info-grid">
+              <div class="info-item"><span class="info-icon">🧠</span><span><strong>Models:</strong> GPT-4o, Claude Sonnet, &amp; more</span></div>
+              <div class="info-item"><span class="info-icon">🔧</span><span><strong>Agentic:</strong> Tool-calling &amp; session management</span></div>
+              <div class="info-item"><span class="info-icon">🔑</span><span><strong>Auth:</strong> GitHub token or BYOK provider</span></div>
+              <div class="info-item"><span class="info-icon">📦</span><span><strong>Requires:</strong> Copilot CLI installed</span></div>
+            </div>
+            <p class="info-models"><strong>Setup:</strong> <code style="background: var(--bg-hover); padding: 0.1rem 0.3rem; border-radius: 3px;">npm install -g @github/copilot</code></p>
+          </div>
+        </div>
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="copilotModel">🧠 Copilot Model</label>
+            <input type="text" id="copilotModel" name="copilotModel" 
+                   placeholder="claude-sonnet-4 (default)"
+                   aria-describedby="copilotModel-hint">
+            <p class="hint" id="copilotModel-hint">Model to use via the Copilot SDK (e.g. claude-sonnet-4, gpt-4o)</p>
           </div>
         </div>
         
@@ -2261,13 +2292,14 @@ function getHtmlPage(): string {
     // Provider toggle
     document.querySelectorAll('input[name="provider"]').forEach(function(radio) {
       radio.addEventListener('change', function(e) {
-        var isCloud = e.target.value === 'cloud';
-        document.getElementById('local-section').style.display = isCloud ? 'none' : 'block';
-        document.getElementById('cloud-section').style.display = isCloud ? 'block' : 'none';
-        document.getElementById('skip-local-group').style.display = isCloud ? 'none' : '';
+        var provider = e.target.value;
+        document.getElementById('local-section').style.display = provider === 'local' ? 'block' : 'none';
+        document.getElementById('cloud-section').style.display = provider === 'cloud' ? 'block' : 'none';
+        document.getElementById('copilot-sdk-section').style.display = provider === 'copilot-sdk' ? 'block' : 'none';
+        document.getElementById('skip-local-group').style.display = provider === 'local' ? '' : 'none';
         // Clear error styling when switching
         modelSelect.classList.remove('error');
-        if (isCloud) loadCloudConfig();
+        if (provider === 'cloud') loadCloudConfig();
       });
     });
     
@@ -2314,16 +2346,27 @@ function getHtmlPage(): string {
       const formData = new FormData(form);
       const repoPath = formData.get('repoPath').trim();
       
-      const data = {
-        repoPath,
-        outputDir: formData.get('outputDir') || undefined,
-        ...(document.querySelector('input[name="provider"]:checked').value === 'cloud' ? {
-          useCloud: true,
-        } : {
+      const providerValue = document.querySelector('input[name="provider"]:checked').value;
+      var providerData = {};
+      if (providerValue === 'cloud') {
+        providerData = { useCloud: true };
+      } else if (providerValue === 'copilot-sdk') {
+        providerData = {
+          useCopilotSdk: true,
+          copilotModel: formData.get('copilotModel') || undefined,
+        };
+      } else {
+        providerData = {
           endpoint: formData.get('endpoint') || undefined,
           model: formData.get('model') || undefined,
           skipLocal: formData.get('skipLocal') === 'on',
-        }),
+        };
+      }
+
+      const data = {
+        repoPath,
+        outputDir: formData.get('outputDir') || undefined,
+        ...providerData,
       };
       
       // Save to recent
@@ -2483,7 +2526,7 @@ function getHtmlPage(): string {
     }
     
     function showResults(outputDir) {
-      const files = ['ONBOARDING.md', 'RUNBOOK.md', 'TASKS.md', 'diagram.mmd'];
+      const files = ['ONBOARDING.md', 'RUNBOOK.md', 'TASKS.md', 'AGENTS.md', 'diagram.mmd'];
       const safePath = outputDir.replace(/\\\\/g, '/');
       
       fileList.innerHTML = files.map(file => \`

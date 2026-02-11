@@ -6,243 +6,283 @@ Good first issues for new contributors, ordered by difficulty.
 
 🟢 Easy (< 1 hour) | 🟡 Medium (1-2 hours) | 🔴 Hard (2+ hours)
 
-## 🟢 Task 1: Fix broken links and tighten README navigation
+## 🟢 Task 1: Trace the Chat Request Path (Frontend → Backend)
 
-**Difficulty:** easy | **Time:** 45–90m
+**Difficulty:** easy | **Time:** 45–60m
 
-Run the link checker workflow locally (or via `make`) and fix any broken/redirecting links in `README.md` and key docs; ensure anchors match headings and relative paths are correct.
+Follow how a chat message is sent from the web app to the Python API by tracing calls starting in `code/frontend/src/api/` through the backend entrypoints in `code/app.py` and `code/create_app.py`. Write a short markdown note (in `docs/`) describing the request/response flow and where auth/config is
 
-### Acceptance Criteria
+### 🎯 Learning Objective
 
-- [ ] `README.md` links resolve without redirects
-- [ ] `docs/` links resolve with correct relative paths
-- [ ] `.github/workflows/broken-links-checker.yml` passes on PR
-
-### Hints
-
-- Search for `](http` and `](docs/` patterns to spot common offenders
-- verify heading anchors match GitHub’s generated slug rules
-
-### Related Files
-
-- `README.md`
-- `.github/workflows/broken-links-checker.yml`
-
----
-
-## 🟢 Task 2: Add a small backend unit test for chat history API
-
-**Difficulty:** easy | **Time:** 60–120m
-
-Create a focused unit test covering one happy-path and one error-path for the chat history endpoints implemented in `code/backend/api/chat_history.py` (e.g., missing conversation id / invalid payload), and wire it into the existing Python test runner configuration.
+Code navigation in a monorepo; understanding API boundaries between TypeScript frontend and Python backend
 
 ### Acceptance Criteria
 
-- [ ] Test file added under the repo’s Python test layout
-- [ ] tests run via existing `Makefile`/pytest invocation
-- [ ] new test asserts both status code and response body shape
+- [ ] Identifies the exact frontend function(s) that issue the chat request
+- [ ] Identifies the backend route/handler that receives it
+- [ ] Includes a sequence diagram or bullet-step flow with file/line references
 
 ### Hints
 
-- Look for existing pytest patterns and fixtures in the repo to reuse
-- prefer FastAPI/Flask test client patterns already used by the project
+- Search for the chat endpoint path in `code/frontend/src/api/*`
+- Use “Find in files” for `FastAPI`/route decorators or app wiring in `code/create_app.py`
 
 ### Related Files
 
-- `code/backend/api/chat_history.py`
-- `pyproject.toml`
-
----
-
-## 🟢 Task 3: Frontend API client: add a typed wrapper for chat history fetch
-
-**Difficulty:** easy | **Time:** 45–90m
-
-In `code/frontend/src/api/`, add a small typed helper function (and types) to fetch chat history from the backend, and update one call site to use it (keeping behavior identical).
-
-### Acceptance Criteria
-
-- [ ] New function has explicit request/response types
-- [ ] existing UI behavior unchanged
-- [ ] `npm test`/lint/build passes via root tooling (`package.json`/`Makefile`)
-
-### Hints
-
-- Mirror patterns used by other API modules in `code/frontend/src/api/`
-- keep the wrapper thin—no new state management
-
-### Related Files
-
-- `code/frontend/src/api/index.ts`
-- `package.json`
-
----
-
-## 🟡 Task 4: Refactor Makefile targets for clearer local dev flows
-
-**Difficulty:** medium | **Time:** 1.5–3h
-
-Review the root `Makefile` and refactor duplicated command sequences into shared variables/targets (e.g., install/lint/test), while keeping target names and outputs backward compatible.
-
-### Acceptance Criteria
-
-- [ ] No target regressions (existing targets still work)
-- [ ] duplication reduced (common commands centralized)
-- [ ] updated inline comments for the refactored targets
-
-### Hints
-
-- Use `make -n <target>` before/after to confirm command parity
-- prefer pattern rules/variables over copy-paste
-
-### Related Files
-
-- `Makefile`
-- `package.json`
-
----
-
-## 🟡 Task 5: Improve Bicep audit signal by documenting and enforcing baseline
-
-**Difficulty:** medium | **Time:** 1–2h
-
-Update the Bicep audit workflow to produce clearer output and document how to run the same checks locally; add a short section in `README.md` describing the audit purpose and how contributors should address findings.
-
-### Acceptance Criteria
-
-- [ ] `.github/workflows/bicep-audit.yml` emits actionable logs (grouped/annotated if supported)
-- [ ] `README.md` includes “Bicep audit” contributor guidance
-- [ ] workflow still runs successfully on PRs
-
-### Hints
-
-- Check existing workflow steps for tool versions and flags that affect verbosity
-- keep docs minimal and link to the workflow file for source-of-truth
-
-### Related Files
-
-- `.github/workflows/bicep-audit.yml`
-- `README.md`
-
----
-
-## 🟡 Task 6: Improve Local Dev Documentation for Monorepo Workflows
-
-**Difficulty:** medium | **Time:** 1-2 hours
-
-Update `README.md` to include a clear “Local Development” section that covers running backend + frontend together, common `make` targets, and where to configure environment variables; cross-link to any deeper docs in `docs/` if they exist.
-
-### Acceptance Criteria
-
-- [ ] README includes step-by-step commands for running locally
-- [ ] README references the correct `Makefile` targets and expected ports
-- [ ] Instructions are validated by running the documented commands successfully.
-
-### Hints
-
-- Search `Makefile` for the canonical dev commands and reuse them verbatim
-- Check `package.json` scripts for frontend dev server commands and ports.
-
-### Related Files
-
-- `README.md`
-- `Makefile`
-
----
-
-## 🟡 Task 7: Add a Fast Unit Test for Chat History API Contract
-
-**Difficulty:** medium | **Time:** 2-4 hours
-
-Create a unit test that exercises the chat history API module and validates the response shape for a basic “list history” or “get conversation” call; keep it hermetic by mocking external dependencies (storage/DB) and run it via the existing Python test tooling.
-
-### Acceptance Criteria
-
-- [ ] New test file is added and passes locally
-- [ ] Test fails if the API response schema changes unexpectedly
-- [ ] External services are mocked (no network calls).
-
-### Hints
-
-- Start from `code/backend/api/chat_history.py` and test the smallest callable surface (function/route handler)
-- Use `pytest` fixtures and monkeypatching to stub persistence.
-
-### Related Files
-
-- `code/backend/api/chat_history.py`
-- `pyproject.toml`
-
----
-
-## 🔴 Task 8: Refactor Backend App Creation to Reduce Import Side Effects
-
-**Difficulty:** hard | **Time:** 4-6 hours
-
-Audit `code/app.py` and `code/create_app.py` for import-time side effects (env reads, client initialization, logging setup) and refactor so initialization happens inside the app factory; ensure existing entrypoints still work.
-
-### Acceptance Criteria
-
-- [ ] App can be created without requiring all runtime env vars at import time
-- [ ] Existing startup paths still function (local run and tests)
-- [ ] Refactor reduces global initialization and improves testability.
-
-### Hints
-
-- Move client construction into `create_app()` and pass dependencies via parameters or a lightweight container
-- Add a minimal smoke test that imports modules without env configured.
-
-### Related Files
-
-- `code/app.py`
+- `code/frontend/src/api/*`
 - `code/create_app.py`
 
 ---
 
-## 🔴 Task 9: Add CI Coverage for Frontend Type Checking and Linting
+## 🟢 Task 2: Document the Batch/Ingestion Entry Point (Azure Functions)
 
-**Difficulty:** hard | **Time:** 3-5 hours
+**Difficulty:** easy | **Time:** 45–60m
 
-Extend the GitHub Actions workflows to run frontend type-check and lint steps in CI (using existing scripts in `package.json`); ensure it runs on PRs and fails the build on errors.
+Inspect the ingestion/batch workload entrypoint in `code/backend/batch/function_app.py` and map out what triggers exist and what each trigger does at a high level. Add a short section to an existing or new doc under `docs/` explaining how ingestion is invoked locally vs in Azure.
+
+### 🎯 Learning Objective
+
+Understanding Azure Functions structure in Python; separating batch workflows from request/response APIs
 
 ### Acceptance Criteria
 
-- [ ] Workflow runs `npm`/`pnpm` install and executes type-check + lint
-- [ ] CI fails when lint/type errors are introduced
-- [ ] Workflow changes are documented briefly in the repo (e.g., in README or workflow comments).
+- [ ] Lists each function trigger found in `function_app.py`
+- [ ] Explains inputs/outputs at a conceptual level (queue/blob/timer/etc.)
+- [ ] Notes how configuration is provided (env vars/settings) with file references
 
 ### Hints
 
-- Reuse patterns from existing workflows in `.github/workflows/`
-- Prefer `npm ci` (or the repo’s chosen package manager) for reproducible installs.
+- Look for decorators/registration patterns in `function_app.py`
+- Search for local run instructions in `README.md` and relate them to the function entrypoint
 
 ### Related Files
 
-- `.github/workflows/broken-links-checker.yml`
-- `package.json`
+- `code/backend/batch/function_app.py`
+- `README.md`
 
 ---
 
-## 🔴 Task 10: Add an End-to-End Test for a Minimal “Chat Roundtrip”
+## 🟢 Task 3: Add a Minimal “Smoke” Unit Test for App Creation
 
-**Difficulty:** hard | **Time:** 1-2 days
+**Difficulty:** easy | **Time:** 30–60m
 
-Implement a new e2e test that starts from the existing harness in `tests/` and validates a minimal chat roundtrip: frontend (or API client) sends a message, backend returns a response, and the conversation is persisted/retrievable via chat history; make it runnable locally and in CI where applicable
+Create a Python unit test that imports the backend app factory and verifies the application can be created without raising exceptions (and optionally that a health or root route exists if present). Place the test alongside existing Python tests under `code/` (use the repo’s existing test framework/c
+
+### 🎯 Learning Objective
+
+Running and extending the Python test suite; validating app wiring/DI doesn’t regress
 
 ### Acceptance Criteria
 
-- [ ] New e2e test is deterministic (no flaky timing assumptions)
-- [ ] Test validates both response and persistence via a follow-up history call
-- [ ] Test is integrated into existing test runner/Makefile target.
+- [ ] Test runs via the repo’s standard test command
+- [ ] Test fails if app creation raises
+- [ ] Test is placed in the appropriate test folder and follows existing naming conventions
 
 ### Hints
 
-- Look for existing e2e scaffolding under `tests/` and copy the setup/teardown patterns
-- If LLM calls are involved, use a stubbed mode or recorded responses to keep it stable.
+- Inspect `pyproject.toml` for pytest configuration
+- Search existing tests under `code/` for patterns/fixtures
 
 ### Related Files
 
-- `tests/`
-- `Makefile`
+- `pyproject.toml`
+- `code/**/tests/*.py`
+
+---
+
+## 🟡 Task 4: Add Contract Tests for a Frontend API Wrapper
+
+**Difficulty:** medium | **Time:** 1.5–3h
+
+Pick one API wrapper in `code/frontend/src/api/` (e.g., chat/history) and add unit tests that validate it calls `fetch` with the correct method, URL, headers, and body. Use the frontend’s existing test tooling from `package.json` (e.g., Vitest/Jest) and mock `fetch`.
+
+### 🎯 Learning Objective
+
+Writing TypeScript unit tests; testing API client contracts without hitting the backend
+
+### Acceptance Criteria
+
+- [ ] Tests cover success and error cases (non-2xx)
+- [ ] Tests assert request shape (URL/method/body)
+- [ ] Tests run in CI/local via the standard frontend test command
+
+### Hints
+
+- Check `package.json` for the configured test runner and scripts
+- Use a `fetch` mock/spies and assert on calls rather than responses only
+
+### Related Files
+
+- `package.json`
+- `code/frontend/src/api/*`
+
+---
+
+## 🟡 Task 5: Implement and Wire a New Backend “/version” Endpoint + Frontend Display
+
+**Difficulty:** medium | **Time:** 3–5h
+
+Add a backend endpoint that returns build/version information (e.g., git SHA or package version) and expose it in the frontend (e.g., footer or about panel). Backend: implement route in the app created by `code/create_app.py` (or wherever routes are registered) and ensure it’s reachable from `code/a
+
+### 🎯 Learning Objective
+
+Full-stack feature addition; API design; writing tests across Python and TypeScript
+
+### Acceptance Criteria
+
+- [ ] `/version` returns JSON with stable keys (e.g., `version`, `commit`)
+- [ ] Frontend displays the value and handles failure gracefully
+- [ ] Both Python and frontend tests added and passing
+
+### Hints
+
+- Use environment variables for commit/version to avoid runtime git calls
+- Follow existing route patterns in `code/create_app.py` and existing API wrapper patterns in `code/frontend/src/api/`
+
+### Related Files
+
+- `code/create_app.py`
+- `code/frontend/src/api/*`
+
+---
+
+## 🟡 Task 6: Trace the Chat Request Path (Frontend → Backend)
+
+**Difficulty:** medium | **Time:** 1-2 hours
+
+Follow a chat request from `code/frontend/src/api/*` through the backend entrypoints in `code/app.py` and `code/create_app.py`; write a short developer note in `docs/` describing the call flow, key functions, and where auth/config is applied.
+
+### 🎯 Learning Objective
+
+Code navigation across a monorepo; understanding request lifecycles and module boundaries
+
+### Acceptance Criteria
+
+- [ ] Document includes the exact frontend function(s) that initiate the request
+- [ ] Document names the backend route/handler and the app factory wiring
+- [ ] Document explains where configuration/environment is loaded
+
+### Hints
+
+- Start at `code/frontend/src/api/` and search for the chat/history call sites
+- Use ripgrep for route names in `code/app.py`
+
+### Related Files
+
+- `code/frontend/src/api`
+- `code/app.py`
+
+---
+
+## 🟡 Task 7: Add Backend Unit Tests for a Core API Behavior
+
+**Difficulty:** medium | **Time:** 2-4 hours
+
+Identify one backend API behavior implemented via `code/app.py`/`code/create_app.py` (e.g., request validation, error mapping, or a small helper used by routes) and add/extend unit tests under `code/tests/` to cover success + failure cases.
+
+### 🎯 Learning Objective
+
+Writing focused Python tests; using fixtures/mocking to isolate external services
+
+### Acceptance Criteria
+
+- [ ] Tests include at least one success and one failure case
+- [ ] Tests run locally via the repo’s Python test command (per `pyproject.toml`)
+- [ ] New tests fail before the fix/change and pass after
+
+### Hints
+
+- Look for existing patterns in `code/tests/` for client/fixture setup
+- Prefer testing pure functions/helpers or dependency-injected components over live Azure calls
+
+### Related Files
+
+- `code/tests`
+- `pyproject.toml`
+
+---
+
+## 🔴 Task 8: Implement a Small Backend Feature and Wire It to the Frontend API Layer
+
+**Difficulty:** hard | **Time:** 4-6 hours
+
+Add a new lightweight backend endpoint (e.g., `/healthz/details` or `/api/config`) in `code/app.py` (wired via `code/create_app.py`) that returns structured JSON; then add a matching client function in `code/frontend/src/api/*` and a minimal usage point (or export) so it’s callable from the frontend
+
+### 🎯 Learning Objective
+
+Designing API contracts; end-to-end wiring across backend and frontend; maintaining backward compatibility
+
+### Acceptance Criteria
+
+- [ ] Backend endpoint returns JSON with at least 3 fields and appropriate HTTP status codes
+- [ ] Frontend API wrapper calls the endpoint and parses the response type-safely
+- [ ] Tests added/updated to validate the endpoint response shape
+
+### Hints
+
+- Mirror existing endpoint patterns in `code/app.py`
+- In the frontend, follow existing fetch wrapper conventions in `code/frontend/src/api`
+
+### Related Files
+
+- `code/app.py`
+- `code/frontend/src/api`
+
+---
+
+## 🔴 Task 9: Refactor Backend App Initialization for Clearer Dependency Injection
+
+**Difficulty:** hard | **Time:** 6-8 hours
+
+Refactor `code/create_app.py` to make dependency construction (clients/services/config) explicit and testable (e.g., extract a `build_services(config)` function or similar); update `code/app.py` accordingly; adjust/add tests to validate the new wiring without changing runtime behavior.
+
+### 🎯 Learning Objective
+
+Refactoring for testability; dependency injection patterns; minimizing behavioral diffs
+
+### Acceptance Criteria
+
+- [ ] No functional behavior changes (existing tests still pass)
+- [ ] New unit tests cover service construction with different config inputs
+- [ ] Refactor reduces direct global/env access in request handlers
+
+### Hints
+
+- Identify where config is read and where clients are instantiated
+- Keep the public app factory signature stable if possible
+
+### Related Files
+
+- `code/create_app.py`
+- `code/app.py`
+
+---
+
+## 🔴 Task 10: Add a CI Check That Runs Targeted Tests for Changed Areas
+
+**Difficulty:** hard | **Time:** 6-10 hours
+
+Update or add a GitHub Actions workflow under `.github/workflows/` to run targeted tests when files under `code/` change (Python tests) and when files under `code/frontend/` change (frontend lint/test/build); ensure it integrates cleanly with existing workflows and repo scripts.
+
+### 🎯 Learning Objective
+
+CI pipeline design in monorepos; path filters; balancing coverage vs runtime
+
+### Acceptance Criteria
+
+- [ ] Workflow uses path-based triggers or conditional steps for `code/` vs `code/frontend/`
+- [ ] Workflow runs successfully on a PR that changes only backend or only frontend
+- [ ] Documentation added to `README.md` describing how CI decides what to run
+
+### Hints
+
+- Review existing workflows in `.github/workflows/` for conventions
+- Use `paths`/`paths-ignore` or `if:` conditions with `github.event.pull_request.changed_files` patterns
+
+### Related Files
+
+- `.github/workflows`
+- `README.md`
 
 ---
 

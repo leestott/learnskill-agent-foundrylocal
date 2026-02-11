@@ -1,13 +1,13 @@
 graph TD
-  RepositoryRoot[Repository Root] --> DevContainerDir[.devcontainer/]
-  RepositoryRoot --> CodeDir[code/]
-  RepositoryRoot --> DataDir[data/]
-  RepositoryRoot --> DockerDir[docker/]
-  RepositoryRoot --> DocsDir[docs/]
-  RepositoryRoot --> ExtensionsDir[extensions/]
-  RepositoryRoot --> InfraDir[infra/]
-  RepositoryRoot --> ScriptsDir[scripts/]
-  RepositoryRoot --> TestsDir[tests/]
+  RepoRoot[Repository Root] --> DevContainerDir[.devcontainer/]
+  RepoRoot --> CodeDir[code/]
+  RepoRoot --> DataDir[data/]
+  RepoRoot --> DockerDir[docker/]
+  RepoRoot --> DocsDir[docs/]
+  RepoRoot --> ExtensionsDir[extensions/]
+  RepoRoot --> InfraDir[infra/]
+  RepoRoot --> ScriptsDir[scripts/]
+  RepoRoot --> TestsDir[tests/]
 
   subgraph DevelopmentEnvironment[Development Environment]
     DevContainerDir --> DockerDir
@@ -16,13 +16,11 @@ graph TD
 
   subgraph ApplicationAndData[Application & Data]
     CodeDir --> DataDir
-    CodeDir --> TestsDir
-    ScriptsDir --> CodeDir
     ScriptsDir --> DataDir
+    TestsDir --> CodeDir
   end
 
-  subgraph InfrastructureAndDocs[Infrastructure & Documentation]
+  subgraph DeploymentAndDocumentation[Deployment & Documentation]
     InfraDir --> DockerDir
-    InfraDir --> DocsDir
     DocsDir --> CodeDir
   end

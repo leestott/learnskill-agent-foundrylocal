@@ -458,20 +458,22 @@ Output format:
     batchEnd: number = 10
   ): Promise<string> {
     const response = await this.complete({
-      systemPrompt: `You are a senior engineer creating onboarding tasks for new contributors. Generate tasks ${batchStart} through ${batchEnd} in this EXACT format. Output ONLY the numbered tasks, no other text.
+      systemPrompt: `You are a senior engineer creating onboarding tasks for students and new contributors. Each task should progressively build skills. Generate tasks ${batchStart} through ${batchEnd} in this EXACT format. Output ONLY the numbered tasks, no other text.
 
 Format for each task:
 {N}. {Title}
 Description: {What to do, referencing real files}
 Difficulty: {easy|medium|hard}
 Time: {estimate}
+Learning: {what skill or concept the student will learn by completing this task}
 Criteria: {criterion1}; {criterion2}; {criterion3}
 Hints: {hint1}; {hint2}
 Files: {file1}, {file2}
 Skills: {skill1}, {skill2}
 
 Difficulty distribution: tasks 1-3 easy, tasks 4-7 medium, tasks 8-10 hard.
-Topics to cover: documentation, testing, code quality, small features, refactoring.`,
+Topics should build progressively: reading code → writing tests → adding features → refactoring.
+Easy tasks teach code navigation and comprehension. Medium tasks teach modification and testing. Hard tasks teach design and architecture.`,
       prompt: `Repository Context:\n${repoContext}\n\nTech Stack: ${techStack.join(', ')}\n\nKey Files:\n${keyFiles.join('\n')}`,
       maxTokens: 2048,
     });

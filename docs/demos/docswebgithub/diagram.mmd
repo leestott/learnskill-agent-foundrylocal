@@ -1,0 +1,42 @@
+graph TD
+    subgraph UserInterface["User Interface Layer"]
+        Frontend["code/frontend<br/>React Chat UI"]
+        Admin["code/backend<br/>Streamlit Admin"]
+        Teams["extensions/teams<br/>Teams Bot"]
+    end
+
+    subgraph Processing["Processing Layer"]
+        Flask["Flask API<br/>code/app.py"]
+        Batch["Azure Functions<br/>code/backend/batch"]
+        Orchestrators["Orchestrators<br/>LangChain/SK/OpenAI"]
+    end
+
+    subgraph Infrastructure["Infrastructure & Deployment"]
+        Bicep["infra/<br/>Bicep Templates"]
+        Docker["docker/<br/>Compose Config"]
+        Scripts["scripts/<br/>Deployment Helpers"]
+    end
+
+    subgraph Development["Development & Quality"]
+        Tests["tests/<br/>E2E & Integration"]
+        CodeTests["code/tests/<br/>Unit Tests"]
+        DevContainer[".devcontainer/<br/>Dev Environment"]
+    end
+
+    subgraph Data["Data Layer"]
+        SampleData["data/<br/>Sample Documents"]
+        Docs["docs/<br/>Documentation"]
+    end
+
+    Frontend -->|API Calls| Flask
+    Admin -->|Ingestion| Batch
+    Teams -->|Bot Framework| Flask
+    Flask --> Orchestrators
+    Batch --> Orchestrators
+    SampleData -->|Test Input| Admin
+    Bicep -->|Provisions| Processing
+    Docker -->|Local Dev| Processing
+    Scripts -->|Deploy| Bicep
+    CodeTests -->|Validates| Processing
+    Tests -->|E2E| UserInterface
+    DevContainer -->|Setup| Development

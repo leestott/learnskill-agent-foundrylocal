@@ -10,31 +10,23 @@ Run `npm install` to install dependencies, then `npm run dev` or `npm start` to 
 
 ## Architecture
 
-### Pattern: Monorepo
+### Pattern: Monolithic
 
-The project follows a monorepo architecture where multiple components share a single root directory. This allows for easier collaboration and sharing of code among different parts of the application. 
+The project is structured as a monolithic application, where all components are tightly coupled and reside in a single codebase. The main components include:
 
 #### Components
-- **Root Directory**: Contains all the components and their respective directories. 
-- **Backend**: Handles business logic and API endpoints. 
-- **Frontend**: Provides the interface for users to interact with the application. 
-- **Docker**: Manages the deployment of the application on different platforms. 
-- **Documentation**: Includes documentation and guides for developers. 
-- **Extensions**: Various extensions and integrations for different use cases. 
-- **Infrastructure**: Configures infrastructure settings and manages cloud resources. 
-- **Scripts**: Contains shell scripts for automation and testing. 
-- **Tests**: Contains unit and integration tests for the application. 
+- **Backend**: Contains the backend services such as API endpoints, database operations, and orchestration logic.
+- **Frontend**: Manages the user interface and interacts with the backend through APIs.
+- **Data**: Stores and manages the contract data, including PDFs and other relevant information.
+- **Docker**: Handles the deployment of backend services using Docker containers.
+- **Documentation**: Provides detailed documentation on how to use the solution accelerator.
 
 #### Key Interactions
-- **API Endpoints**: The backend provides RESTful APIs for interacting with the frontend and other external services.
-- **UI Integration**: The frontend interacts with the backend through APIs to fetch data and display it.
-- **CI/CD**: Continuous Integration and Continuous Deployment pipelines ensure that new changes are tested and deployed automatically.
-- **Documentation**: Documentation is stored separately but referenced by the frontend and backend.
-- **Extensions**: Extensions can integrate with the existing components to provide additional functionality.
-- **Infrastructure**: Infrastructure configurations are managed centrally to ensure consistency across different environments.
-- **Testing**: Unit and integration tests are executed to ensure the quality and reliability of the application.
+- **Backend** communicates with the **Database** to store and retrieve contract data.
+- **Frontend** sends requests to the **Backend** to perform operations like adding URLs, configuring platforms, and managing users.
+- **Data** is accessed by both the **Backend** and **Frontend** to ensure consistency and integrity of the data.
 
-This monorepo approach simplifies the development process by consolidating all components under a single namespace, making it easier to maintain and update the overall system.
+This monolithic approach simplifies development and deployment but may lead to increased coupling and difficulty in scaling individual components independently.
 
 ## Key Flows
 
@@ -53,57 +45,55 @@ Build the project using npm
 
 ```mermaid
 graph TD
-    devcontainer[devcontainer] --> code[code]
-    data[data] --> scripts[scripts]
-    docker[docker] --> infra[infra]
-    docs[docs] --> scripts[scripts]
-    extensions[extensions] --> scripts[scripts]
-    infra[infra] --> tests[tests]
-    Python[Python] --> scripts[scripts]
-    TypeScript[TypeScript] --> scripts[scripts]
-    Bicep[Bicep] --> scripts[scripts]
 
-    data[data] --> scripts[scripts]
-    scripts[scripts] --> tests[tests]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> devcontainer[devcontainer]
-    scripts[scripts] --> code[code]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
+    code --> data
+    code --> scripts
+    code --> extensions
+    code --> docs
+
+    data --> scripts
+    data --> tests
+
+    docker --> infra
+    docker --> tests
+
+    infra --> tests
+
+    scripts --> tests
+
+    Python --> tests
+    TypeScript --> tests
+    Bicep --> tests
 ```
+
+## For Instructors
+
+This section summarises the project for instructors, supervisors, and mentors overseeing student onboarding.
+
+### Project Complexity
+
+- **Dependency count:** 0
+- **Key flows:** 1
+- **Estimated complexity:** Low
+
+### Learning Outcomes
+
+Students working through the onboarding tasks will learn to:
+
+1. Navigate and understand an unfamiliar codebase
+2. Set up and run a real-world development environment
+3. Read and write automated tests
+4. Contribute code through the pull request workflow
+5. Use GitHub Copilot as a learning and productivity tool
+
+### Suggested Session Plan
+
+| Session | Focus | Tasks |
+|---------|-------|-------|
+| 1 | Orientation & setup | Tasks 1-3 (easy) |
+| 2 | First contribution | Tasks 4-5 (easy-medium) |
+| 3 | Deeper work | Tasks 6-8 (medium) |
+| 4 | Independent feature | Tasks 9-10 (hard) |
 
 ## Microsoft Technology References
 

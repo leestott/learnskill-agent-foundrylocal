@@ -1,8 +1,9 @@
 /**
  * Orchestrator
  * 
- * Uses a Copilot SDK-style session to coordinate the onboarding pack generation.
- * Defines tools/actions the agent can invoke and manages the workflow.
+ * Coordinates the onboarding pack generation using an MCP-compatible tool-calling
+ * pattern. Defines tools/actions the agent can invoke and manages the workflow.
+ * Integrates with GitHub Copilot SDK and Microsoft Learn MCP Server.
  */
 
 import { writeFile, mkdir } from 'fs/promises';
@@ -10,6 +11,7 @@ import { join, dirname } from 'path';
 import { existsSync } from 'fs';
 import { RepoScanner } from './repoScanner.js';
 import { LocalModelClient, getLocalModelClient } from './localModelClient.js';
+import { CopilotSdkClient } from './copilotSdkClient.js';
 import type {
   RepoMetadata,
   OnboardingPack,
@@ -24,12 +26,20 @@ import type {
   MicrosoftTechDetection,
   ProgressCallback,
   ProgressInfo,
+  AgentsDoc,
+  AgentSkill,
+  AgentMcpServer,
+  AgentWorkflow,
 } from './types.js';
+
+/** Union type for LLM clients the orchestrator can use */
+type LlmClient = LocalModelClient | CopilotSdkClient;
 
 export class Orchestrator {
   private config: GenerationConfig;
   private scanner: RepoScanner;
-  private localModel: LocalModelClient;
+  private localModel: LlmClient;
+  private copilotSdkClient: CopilotSdkClient | null = null;
   private repoMetadata: RepoMetadata | null = null;
   private steps: WorkflowStep[] = [];
   private verbose: boolean;
@@ -40,14 +50,23 @@ export class Orchestrator {
   constructor(config: GenerationConfig) {
     this.config = config;
     this.scanner = new RepoScanner(config.repoPath);
-    const cloudConfig = config.cloudEndpoint && config.cloudApiKey
-      ? { endpoint: config.cloudEndpoint, apiKey: config.cloudApiKey }
-      : undefined;
-    this.localModel = getLocalModelClient(
-      config.foundryEndpoint,
-      config.cloudModel || config.foundryModel,
-      cloudConfig
-    );
+
+    if (config.useCopilotSdk) {
+      // Use GitHub Copilot SDK as the LLM provider
+      this.copilotSdkClient = new CopilotSdkClient({
+        model: config.copilotModel,
+      });
+      this.localModel = this.copilotSdkClient;
+    } else {
+      const cloudConfig = config.cloudEndpoint && config.cloudApiKey
+        ? { endpoint: config.cloudEndpoint, apiKey: config.cloudApiKey }
+        : undefined;
+      this.localModel = getLocalModelClient(
+        config.foundryEndpoint,
+        config.cloudModel || config.foundryModel,
+        cloudConfig
+      );
+    }
     this.verbose = config.verbose || false;
     this.onProgress = config.onProgress;
   }
@@ -117,18 +136,20 @@ export class Orchestrator {
   async run(): Promise<OnboardingPack> {
     this.log('Starting onboarding pack generation...');
 
-    // Step 1: Check Foundry Local availability
-    await this.executeStep('check-foundry', 'Checking Foundry Local', async () => {
+    // Step 1: Check LLM provider availability
+    await this.executeStep('check-foundry', 'Checking LLM provider', async () => {
       this.reportDetail('Connecting to inference endpoint...');
       const status = await this.localModel.checkStatus();
       if (status.available) {
-        const providerName = this.localModel.isCloudMode ? 'Microsoft Foundry' : 'Foundry Local';
+        const isCopilot = 'isCopilotSdk' in this.localModel && this.localModel.isCopilotSdk;
+        const providerName = isCopilot ? 'GitHub Copilot SDK'
+          : this.localModel.isCloudMode ? 'Microsoft Foundry' : 'Foundry Local';
         this.log(`✓ ${providerName} available at ${status.endpoint}`);
         this.log(`  Active model: ${status.activeModel}`);
         this.reportDetail(`${providerName} online — model: ${status.activeModel || 'default'}`);
       } else if (!this.config.skipLocalModel) {
-        this.log('⚠ Foundry Local not available. Using fallback generation.');
-        this.reportDetail('Foundry Local unavailable — using fallback');
+        this.log('⚠ LLM provider not available. Using fallback generation.');
+        this.reportDetail('LLM provider unavailable — using fallback');
       }
       return status;
     });
@@ -282,13 +303,18 @@ export class Orchestrator {
 
     // Step 9: Write output files
     await this.executeStep('write-files', 'Writing output files', async () => {
-      this.reportDetail('Writing ONBOARDING.md, RUNBOOK.md, TASKS.md, diagram.mmd...');
+      this.reportDetail('Writing ONBOARDING.md, RUNBOOK.md, TASKS.md, AGENTS.md, diagram.mmd...');
       await this.writeOutputFiles(pack);
       return true;
     });
 
     this.log('\n✓ Onboarding pack generated successfully!');
     this.log(`  Output directory: ${this.config.outputDir}`);
+
+    // Clean up SDK client resources if needed
+    if (this.copilotSdkClient) {
+      await this.copilotSdkClient.dispose();
+    }
 
     return pack;
   }
@@ -840,7 +866,95 @@ export class Orchestrator {
         commonCommands: this.generateCommonCommands(meta),
       },
       tasks: { tasks },
+      agents: this.generateAgentsDoc(meta),
       diagram,
+    };
+  }
+
+  /**
+   * Generate AGENTS.md content from repo metadata
+   */
+  private generateAgentsDoc(meta: RepoMetadata): AgentsDoc {
+    const skills: AgentSkill[] = [];
+    const mcpServers: AgentMcpServer[] = [];
+    const workflows: AgentWorkflow[] = [];
+
+    // Detect skills from build system and languages
+    const bf = meta.buildFiles[0];
+    if (bf) {
+      skills.push({
+        name: `${bf.type}-build`,
+        description: `Build and manage the ${bf.type} project`,
+        triggers: ['build', 'install dependencies', 'compile'],
+      });
+    }
+
+    if (meta.testFrameworks.length > 0) {
+      skills.push({
+        name: 'test-runner',
+        description: `Run tests using ${meta.testFrameworks.join(', ')}`,
+        triggers: ['run tests', 'test coverage', 'check tests'],
+      });
+    }
+
+    for (const lang of meta.languages.slice(0, 3)) {
+      skills.push({
+        name: `${lang.name.toLowerCase()}-development`,
+        description: `Develop and review ${lang.name} code`,
+        triggers: [`write ${lang.name}`, `review ${lang.name}`, `refactor ${lang.name}`],
+      });
+    }
+
+    // Detect MCP servers from config files
+    mcpServers.push({
+      name: 'microsoft-learn',
+      url: 'https://learn.microsoft.com/api/mcp',
+      tools: ['microsoft_docs_search', 'microsoft_docs_fetch', 'microsoft_code_sample_search'],
+    });
+
+    // Detect workflows from build scripts
+    workflows.push({
+      name: 'onboarding',
+      description: 'New contributor onboarding workflow',
+      steps: ['Clone repository', 'Install dependencies', 'Run tests', 'Read ONBOARDING.md'],
+    });
+
+    if (bf?.scripts?.build) {
+      workflows.push({
+        name: 'development',
+        description: 'Standard development workflow',
+        steps: ['Create feature branch', 'Make changes', 'Run tests', 'Build project', 'Submit PR'],
+      });
+    }
+
+    if (meta.configFiles.some(cf => cf.type === 'ci')) {
+      workflows.push({
+        name: 'ci-cd',
+        description: 'Continuous integration and deployment',
+        steps: ['Push to branch', 'CI runs tests', 'CI runs build', 'Deploy on merge to main'],
+      });
+    }
+
+    // Code review workflow — always included for educational value
+    workflows.push({
+      name: 'code-review',
+      description: 'Structured code review workflow for learning and quality assurance',
+      steps: [
+        'Open the pull request and read the description',
+        'Review the diff file-by-file, starting with tests',
+        'Check code style and naming conventions',
+        'Verify tests cover the changes',
+        'Run the test suite locally',
+        'Leave constructive feedback with specific suggestions',
+      ],
+    });
+
+    return {
+      projectName: meta.name,
+      description: `Agent configuration for ${meta.name} — a ${meta.languages[0]?.name || 'multi-language'} project with ${meta.dependencies.length} dependencies.`,
+      skills,
+      mcpServers,
+      workflows,
     };
   }
 
@@ -1338,6 +1452,7 @@ export class Orchestrator {
       const descMatch = block.match(/Description:\s*(.+?)(?:\n(?=[A-Z])|$)/s);
       const diffMatch = block.match(/Difficulty:\s*(easy|medium|hard)/i);
       const timeMatch = block.match(/Time:\s*(.+?)(?:\n|$)/);
+      const learningMatch = block.match(/Learning:\s*(.+?)(?:\n(?=[A-Z])|$)/s);
       const criteriaMatch = block.match(/Criteria:\s*(.+?)(?:\n(?=[A-Z])|$)/s);
       const hintsMatch = block.match(/Hints:\s*(.+?)(?:\n(?=[A-Z])|$)/s);
       const filesMatch = block.match(/Files:\s*(.+?)(?:\n(?=[A-Z])|$)/s);
@@ -1369,6 +1484,7 @@ export class Orchestrator {
         description: descMatch ? descMatch[1].trim().slice(0, 300) : block.slice(0, 300),
         difficulty,
         estimatedTime: timeMatch ? timeMatch[1].trim() : (idx < 3 ? '30 minutes' : idx < 7 ? '1-2 hours' : '2-4 hours'),
+        learningObjective: learningMatch ? learningMatch[1].trim().slice(0, 200) : undefined,
         acceptanceCriteria: criteria.slice(0, 3),
         hints: hints.slice(0, 2),
         relatedFiles: relatedFiles.slice(0, 3),
@@ -1401,43 +1517,53 @@ export class Orchestrator {
     return [
       {
         id: 1, title: 'Review README and documentation', description: 'Read through the README and any documentation to understand the project',
-        difficulty: 'easy', estimatedTime: '30 minutes', acceptanceCriteria: ['Summarize the project purpose'], hints: ['Start with README.md'], relatedFiles: ['README.md'], skills: ['documentation'],
+        difficulty: 'easy', estimatedTime: '30 minutes', learningObjective: 'Learn to navigate project documentation and understand project purpose at a high level',
+        acceptanceCriteria: ['Summarize the project purpose'], hints: ['Start with README.md'], relatedFiles: ['README.md'], skills: ['documentation'],
       },
       {
         id: 2, title: 'Set up local development environment', description: 'Install dependencies and verify you can run the project',
-        difficulty: 'easy', estimatedTime: '30 minutes', acceptanceCriteria: ['Project runs locally'], hints: ['Follow the runbook setup steps'], relatedFiles: ['package.json'], skills: ['setup'],
+        difficulty: 'easy', estimatedTime: '30 minutes', learningObjective: 'Learn to set up development environments and manage project dependencies',
+        acceptanceCriteria: ['Project runs locally'], hints: ['Follow the runbook setup steps'], relatedFiles: ['package.json'], skills: ['setup'],
       },
       {
         id: 3, title: 'Run the test suite', description: 'Execute all tests and understand the testing strategy',
-        difficulty: 'easy', estimatedTime: '30 minutes', acceptanceCriteria: ['All tests pass'], hints: ['Check for test commands in package.json'], relatedFiles: [], skills: ['testing'],
+        difficulty: 'easy', estimatedTime: '30 minutes', learningObjective: 'Learn how automated testing works and how to interpret test results',
+        acceptanceCriteria: ['All tests pass'], hints: ['Check for test commands in package.json'], relatedFiles: [], skills: ['testing'],
       },
       {
         id: 4, title: 'Add a missing unit test', description: 'Find an untested function and add test coverage',
-        difficulty: 'medium', estimatedTime: '1 hour', acceptanceCriteria: ['New test passes', 'Coverage increases'], hints: ['Look for complex functions without tests'], relatedFiles: [], skills: ['testing'],
+        difficulty: 'medium', estimatedTime: '1 hour', learningObjective: 'Learn to write unit tests and understand code coverage principles',
+        acceptanceCriteria: ['New test passes', 'Coverage increases'], hints: ['Look for complex functions without tests'], relatedFiles: [], skills: ['testing'],
       },
       {
         id: 5, title: 'Fix a typo or improve documentation', description: 'Find and fix documentation issues',
-        difficulty: 'easy', estimatedTime: '30 minutes', acceptanceCriteria: ['PR submitted with fix'], hints: ['Check code comments and README'], relatedFiles: [], skills: ['documentation'],
+        difficulty: 'easy', estimatedTime: '30 minutes', learningObjective: 'Learn the PR workflow: branch, commit, push, and submit a pull request',
+        acceptanceCriteria: ['PR submitted with fix'], hints: ['Check code comments and README'], relatedFiles: [], skills: ['documentation'],
       },
       {
         id: 6, title: 'Add input validation', description: 'Add validation to a function that accepts user input',
-        difficulty: 'medium', estimatedTime: '1-2 hours', acceptanceCriteria: ['Invalid inputs are rejected', 'Tests cover new validation'], hints: ['Look for functions handling external data'], relatedFiles: [], skills: ['security', 'validation'],
+        difficulty: 'medium', estimatedTime: '1-2 hours', learningObjective: 'Learn defensive programming and input validation patterns for security',
+        acceptanceCriteria: ['Invalid inputs are rejected', 'Tests cover new validation'], hints: ['Look for functions handling external data'], relatedFiles: [], skills: ['security', 'validation'],
       },
       {
         id: 7, title: 'Improve error handling', description: 'Find a place where errors could be handled better',
-        difficulty: 'medium', estimatedTime: '1-2 hours', acceptanceCriteria: ['Errors provide useful messages'], hints: ['Look for generic catch blocks'], relatedFiles: [], skills: ['error-handling'],
+        difficulty: 'medium', estimatedTime: '1-2 hours', learningObjective: 'Learn error handling patterns and how to write user-friendly error messages',
+        acceptanceCriteria: ['Errors provide useful messages'], hints: ['Look for generic catch blocks'], relatedFiles: [], skills: ['error-handling'],
       },
       {
         id: 8, title: 'Add TypeScript types or JSDoc', description: 'Improve type safety in a module',
-        difficulty: 'medium', estimatedTime: '1-2 hours', acceptanceCriteria: ['Types are accurate', 'No type errors'], hints: ['Start with any types or missing annotations'], relatedFiles: [], skills: ['typescript'],
+        difficulty: 'medium', estimatedTime: '1-2 hours', learningObjective: 'Learn how static typing improves code quality and catches bugs early',
+        acceptanceCriteria: ['Types are accurate', 'No type errors'], hints: ['Start with any types or missing annotations'], relatedFiles: [], skills: ['typescript'],
       },
       {
         id: 9, title: 'Refactor a complex function', description: 'Break down a long function into smaller pieces',
-        difficulty: 'hard', estimatedTime: '2-4 hours', acceptanceCriteria: ['Function is easier to understand', 'Tests still pass'], hints: ['Look for functions over 50 lines'], relatedFiles: [], skills: ['refactoring'],
+        difficulty: 'hard', estimatedTime: '2-4 hours', learningObjective: 'Learn refactoring techniques: extract method, single responsibility, and clean code principles',
+        acceptanceCriteria: ['Function is easier to understand', 'Tests still pass'], hints: ['Look for functions over 50 lines'], relatedFiles: [], skills: ['refactoring'],
       },
       {
         id: 10, title: 'Add a small feature', description: 'Implement a minor enhancement from the issue tracker',
-        difficulty: 'hard', estimatedTime: '2-4 hours', acceptanceCriteria: ['Feature works as specified', 'Tests added'], hints: ['Check issues labeled good-first-issue'], relatedFiles: [], skills: ['feature-development'],
+        difficulty: 'hard', estimatedTime: '2-4 hours', learningObjective: 'Learn end-to-end feature development: spec reading, implementation, testing, and documentation',
+        acceptanceCriteria: ['Feature works as specified', 'Tests added'], hints: ['Check issues labeled good-first-issue'], relatedFiles: [], skills: ['feature-development'],
       },
     ];
   }
@@ -1559,6 +1685,11 @@ export class Orchestrator {
     await writeFile(join(this.config.outputDir, 'TASKS.md'), tasksContent, 'utf-8');
     this.log('  Written: TASKS.md');
 
+    // Write AGENTS.md
+    const agentsContent = this.renderAgents(pack);
+    await writeFile(join(this.config.outputDir, 'AGENTS.md'), agentsContent, 'utf-8');
+    this.log('  Written: AGENTS.md');
+
     // Write diagram.mmd
     await writeFile(join(this.config.outputDir, 'diagram.mmd'), pack.diagram, 'utf-8');
     this.log('  Written: diagram.mmd');
@@ -1593,6 +1724,31 @@ export class Orchestrator {
     }
 
     content += `## Component Diagram\n\n\`\`\`mermaid\n${pack.diagram}\n\`\`\`\n\n`;
+
+    // For Instructors section
+    content += `## For Instructors\n\n`;
+    content += `This section summarises the project for instructors, supervisors, and mentors overseeing student onboarding.\n\n`;
+    content += `### Project Complexity\n\n`;
+    const langCount = onboarding.dependencyMap.external.length;
+    const flowCount = onboarding.keyFlows.length;
+    const complexity = langCount > 20 ? 'High' : langCount > 8 ? 'Medium' : 'Low';
+    content += `- **Dependency count:** ${langCount}\n`;
+    content += `- **Key flows:** ${flowCount}\n`;
+    content += `- **Estimated complexity:** ${complexity}\n\n`;
+    content += `### Learning Outcomes\n\n`;
+    content += `Students working through the onboarding tasks will learn to:\n\n`;
+    content += `1. Navigate and understand an unfamiliar codebase\n`;
+    content += `2. Set up and run a real-world development environment\n`;
+    content += `3. Read and write automated tests\n`;
+    content += `4. Contribute code through the pull request workflow\n`;
+    content += `5. Use GitHub Copilot as a learning and productivity tool\n\n`;
+    content += `### Suggested Session Plan\n\n`;
+    content += `| Session | Focus | Tasks |\n`;
+    content += `|---------|-------|-------|\n`;
+    content += `| 1 | Orientation & setup | Tasks 1-3 (easy) |\n`;
+    content += `| 2 | First contribution | Tasks 4-5 (easy-medium) |\n`;
+    content += `| 3 | Deeper work | Tasks 6-8 (medium) |\n`;
+    content += `| 4 | Independent feature | Tasks 9-10 (hard) |\n\n`;
 
     if (onboarding.dependencyMap.external.length > 0) {
       content += `## Key Dependencies\n\n`;
@@ -1718,7 +1874,11 @@ export class Orchestrator {
       content += `## ${emoji} Task ${task.id}: ${task.title}\n\n`;
       content += `**Difficulty:** ${task.difficulty} | **Time:** ${task.estimatedTime}\n\n`;
       content += `${task.description}\n\n`;
-      
+
+      if (task.learningObjective) {
+        content += `### 🎯 Learning Objective\n\n${task.learningObjective}\n\n`;
+      }
+
       content += `### Acceptance Criteria\n\n`;
       for (const ac of task.acceptanceCriteria) {
         content += `- [ ] ${ac}\n`;
@@ -1743,6 +1903,58 @@ export class Orchestrator {
 
       content += '---\n\n';
     }
+
+    return content;
+  }
+
+  /**
+   * Render AGENTS.md — Agent skills, MCP servers, and workflows
+   */
+  private renderAgents(pack: OnboardingPack): string {
+    const { agents } = pack;
+    let content = `# ${agents.projectName} — Agent Configuration\n\n`;
+    content += `${agents.description}\n\n`;
+
+    if (agents.skills.length > 0) {
+      content += `## Skills\n\n`;
+      content += `| Skill | Description | Triggers |\n`;
+      content += `|-------|-------------|----------|\n`;
+      for (const skill of agents.skills) {
+        content += `| ${skill.name} | ${skill.description} | ${skill.triggers.join(', ')} |\n`;
+      }
+      content += '\n';
+    }
+
+    if (agents.mcpServers.length > 0) {
+      content += `## MCP Servers\n\n`;
+      for (const server of agents.mcpServers) {
+        content += `### ${server.name}\n\n`;
+        content += `**URL:** \`${server.url}\`\n\n`;
+        content += `**Tools:** ${server.tools.map(t => '`' + t + '`').join(', ')}\n\n`;
+      }
+    }
+
+    if (agents.workflows.length > 0) {
+      content += `## Workflows\n\n`;
+      for (const wf of agents.workflows) {
+        content += `### ${wf.name}\n\n`;
+        content += `${wf.description}\n\n`;
+        content += wf.steps.map((s, i) => `${i + 1}. ${s}`).join('\n') + '\n\n';
+      }
+    }
+
+    content += `## How to Use with GitHub Copilot\n\n`;
+    content += `This repository is configured for GitHub Copilot Agent Mode. Use these example prompts in VS Code:\n\n`;
+    content += `| Goal | Example Prompt |\n`;
+    content += `|------|---------------|\n`;
+    content += `| Understand the project | "Explain the architecture of this project" |\n`;
+    content += `| Start a task | "Help me work on Task 1 from TASKS.md" |\n`;
+    content += `| Review code | "Review the changes in my current branch" |\n`;
+    content += `| Find documentation | "What does the ${agents.projectName} API do?" |\n`;
+    content += `| Debug an issue | "Why is this test failing?" |\n`;
+    content += `| Learn a concept | "Explain how error handling works in this codebase" |\n`;
+    content += '\n';
+    content += `> **Tip:** Open the onboarding docs (ONBOARDING.md, RUNBOOK.md, TASKS.md) as context when chatting with Copilot for better answers.\n\n`;
 
     return content;
   }

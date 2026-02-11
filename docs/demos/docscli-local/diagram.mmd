@@ -1,51 +1,20 @@
 graph TD
-    devcontainer[devcontainer] --> code[code]
-    data[data] --> scripts[scripts]
-    docker[docker] --> infra[infra]
-    docs[docs] --> scripts[scripts]
-    extensions[extensions] --> scripts[scripts]
-    infra[infra] --> tests[tests]
-    Python[Python] --> scripts[scripts]
-    TypeScript[TypeScript] --> scripts[scripts]
-    Bicep[Bicep] --> scripts[scripts]
 
-    data[data] --> scripts[scripts]
-    scripts[scripts] --> tests[tests]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> devcontainer[devcontainer]
-    scripts[scripts] --> code[code]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> extensions[extensions]
-    scripts[scripts] --> docs[docs]
-    scripts[scripts] --> infra[infra]
+    code --> data
+    code --> scripts
+    code --> extensions
+    code --> docs
+
+    data --> scripts
+    data --> tests
+
+    docker --> infra
+    docker --> tests
+
+    infra --> tests
+
+    scripts --> tests
+
+    Python --> tests
+    TypeScript --> tests
+    Bicep --> tests
