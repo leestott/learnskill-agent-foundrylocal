@@ -4,7 +4,7 @@
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)](https://www.typescriptlang.org/)
 [![Foundry Local](https://img.shields.io/badge/Foundry%20Local-Compatible-purple.svg)](https://github.com/microsoft/foundry)
-[![Microsoft Foundry](https://img.shields.io/badge/Microsoft%20Foundry-Cloud%20Ready-0078D4.svg)](https://foundry.microsoft.com/)
+[![Microsoft Foundry](https://img.shields.io/badge/Microsoft%20Foundry-Cloud%20Ready-0078D4.svg)](https://ai.azure.com/)
 [![GitHub Copilot](https://img.shields.io/badge/Copilot-Agent%20Skill-orange.svg)](https://github.com/features/copilot)
 [![Copilot SDK](https://img.shields.io/badge/Copilot_SDK-0.1.23-6f42c1.svg)](https://github.com/github/copilot-sdk)
 [![Microsoft Learn MCP](https://img.shields.io/badge/Learn_MCP-Integrated-0078D4?logo=microsoft)](https://github.com/MicrosoftDocs/mcp)
@@ -147,7 +147,7 @@ Higher-quality output using cloud-hosted models:
 - **Same workflow**: Identical 9-step pipeline, just a different backend
 - **OpenAI-compatible**: Works with any Microsoft Foundry deployment
 
-> Get started at [foundry.microsoft.com](https://foundry.microsoft.com/)   see [Cloud Usage](#cloud-usage)
+> Get started at [ai.azure.com](https://ai.azure.com/)   see [Cloud Usage](#cloud-usage)
 
 ### GitHub Copilot SDK
 
@@ -247,7 +247,7 @@ npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accele
 ```bash
 # Using Microsoft Foundry cloud models
 npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator \
-  --cloud-endpoint https://your-project.services.foundry.microsoft.com \
+  --cloud-endpoint https://your-project.services.ai.azure.com \
   --cloud-api-key YOUR_API_KEY \
   --cloud-model gpt-4o-mini \
   --verbose
@@ -255,7 +255,7 @@ npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accele
 # Using environment variable for API key
 export FOUNDRY_CLOUD_API_KEY=your-key-here
 npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator \
-  --cloud-endpoint https://your-project.services.foundry.microsoft.com \
+  --cloud-endpoint https://your-project.services.ai.azure.com \
   --cloud-model gpt-4o
 ```
 
@@ -829,14 +829,14 @@ curl http://127.0.0.1:<port>/v1/models
 
 ### Setting Up Microsoft Foundry (Cloud)
 
-1. Go to [foundry.microsoft.com](https://foundry.microsoft.com/) and create a project
+1. Go to [ai.azure.com](https://ai.azure.com/) and create a project
 2. Deploy a model (e.g., `gpt-4o-mini`, `Phi-4`, `DeepSeek-R1`)
 3. Copy the **endpoint URL** and **API key** from the deployment page
 4. Use them with the `--cloud-endpoint` and `--cloud-api-key` flags:
 
 ```bash
 npx onboard https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator \
-  --cloud-endpoint https://your-project.services.foundry.microsoft.com \
+  --cloud-endpoint https://your-project.services.ai.azure.com \
   --cloud-api-key YOUR_KEY \
   --cloud-model gpt-4o-mini
 ```

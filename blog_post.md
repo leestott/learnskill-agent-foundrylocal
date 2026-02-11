@@ -288,7 +288,7 @@ npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution
 
 - **Node.js 20+**
 - **Foundry Local**   `winget install Microsoft.FoundryLocal` (for on-device inference)
-- **Microsoft Foundry account**   [foundry.microsoft.com](https://foundry.microsoft.com/) (for cloud inference)
+- **Microsoft Foundry account**   [ai.azure.com](https://ai.azure.com/) (for cloud inference)
 - **GitHub Copilot CLI**   `npm install -g @github/copilot` (for Copilot SDK mode)
 
 ### Try It on Your Own Repos
@@ -313,4 +313,4 @@ npm run onboard -- https://github.com/your-org/your-repo --copilot-sdk
 
 *The Repo Onboarding Pack Generator is open-source under the MIT License. Contributions welcome   check [TASKS.md](docs/demos/docswebcloud/TASKS.md) for example starter issues.*
 
-*Built with [Foundry Local](https://github.com/microsoft/foundry), [Microsoft Foundry](https://foundry.microsoft.com/), the [GitHub Copilot SDK](https://github.com/github/copilot-sdk), the [OpenAI SDK](https://github.com/openai/openai-node), and the [Microsoft Learn MCP Server](https://github.com/MicrosoftDocs/mcp).*
+*Built with [Foundry Local](https://github.com/microsoft/foundry), [Microsoft Foundry](https://ai.azure.com/), the [GitHub Copilot SDK](https://github.com/github/copilot-sdk), the [OpenAI SDK](https://github.com/openai/openai-node), and the [Microsoft Learn MCP Server](https://github.com/MicrosoftDocs/mcp).*
