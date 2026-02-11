@@ -55,7 +55,7 @@ npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution
 
 # Run with Microsoft Foundry (cloud   higher quality)
 npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator \
-  --cloud-endpoint https://your-project.services.foundry.microsoft.com \
+  --cloud-endpoint https://your-resource.cognitiveservices.azure.com/openai/deployments/ \
   --cloud-api-key YOUR_API_KEY \
   --cloud-model gpt-4o-mini
 
@@ -878,7 +878,7 @@ FOUNDRY_LOCAL_MODEL=phi-4
 OUTPUT_DIR=./docs
 
 # Microsoft Foundry cloud settings
-FOUNDRY_CLOUD_ENDPOINT=https://your-project.services.foundry.microsoft.com
+FOUNDRY_CLOUD_ENDPOINT=https://your-resource.cognitiveservices.azure.com/openai/deployments/
 FOUNDRY_CLOUD_API_KEY=your-api-key-here
 FOUNDRY_CLOUD_MODEL=gpt-4o-mini
 

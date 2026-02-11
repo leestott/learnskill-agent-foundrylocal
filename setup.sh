@@ -104,7 +104,7 @@ if [ "$HAS_CLOUD" = true ]; then
     ok "Cloud endpoint and API key configured in .env"
 else
     warn "Cloud not configured (optional). Edit .env to add:"
-    printf "  ${GRAY}FOUNDRY_CLOUD_ENDPOINT=https://your-project.services.foundry.microsoft.com${NC}\n"
+    printf "  ${GRAY}FOUNDRY_CLOUD_ENDPOINT=https://your-resource.cognitiveservices.azure.com/openai/deployments/${NC}\n"
     printf "  ${GRAY}FOUNDRY_CLOUD_API_KEY=your-key${NC}\n"
     printf "  ${GRAY}FOUNDRY_CLOUD_MODEL=gpt-4o-mini${NC}\n"
 fi

@@ -102,7 +102,7 @@ if ($hasEndpoint -and $hasKey) {
     Write-Ok "Cloud endpoint and API key configured in .env"
 } else {
     Write-Warn "Cloud not configured (optional). Edit .env to add:"
-    Write-Host "         FOUNDRY_CLOUD_ENDPOINT=https://your-project.services.foundry.microsoft.com" -ForegroundColor Gray
+    Write-Host "         FOUNDRY_CLOUD_ENDPOINT=https://your-resource.cognitiveservices.azure.com/openai/deployments/" -ForegroundColor Gray
     Write-Host "         FOUNDRY_CLOUD_API_KEY=your-key" -ForegroundColor Gray
     Write-Host "         FOUNDRY_CLOUD_MODEL=gpt-4o-mini" -ForegroundColor Gray
 }
