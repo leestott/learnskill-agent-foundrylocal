@@ -1,0 +1,45 @@
+{
+  "name": "repo-onboarding-pack",
+  "version": "1.0.0",
+  "description": "Hybrid AI tool to generate engineering onboarding packs using Foundry Local + Copilot SDK",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "onboard": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "onboard": "tsx src/index.ts",
+    "serve": "tsx src/server.ts",
+    "web": "tsx src/server.ts",
+    "setup": "node -e \"const {platform}=require('os');const {execSync}=require('child_process');if(platform()==='win32'){execSync('powershell -ExecutionPolicy Bypass -File setup.ps1',{stdio:'inherit'})}else{execSync('bash setup.sh',{stdio:'inherit'})}\""
+  },
+  "keywords": [
+    "onboarding",
+    "copilot",
+    "foundry-local",
+    "agent-skill",
+    "developer-tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@copilot-extensions/preview-sdk": "^5.0.0",
+    "commander": "^12.1.0",
+    "dotenv": "^17.2.4",
+    "glob": "^11.0.0",
+    "ignore": "^6.0.2",
+    "openai": "^4.70.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.js
+*.js.map
+*.d.ts
+!jest.config.js
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Cache
+.cache/
+.turbo/
+.npm/
+.parcel-cache/
+
+# Test coverage
+coverage/
+*.lcov
+
+# Temp files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Package manager locks (keep one)
+# package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated docs in output directories (real docs in /docs are kept)
+output/
+generated-docs/
+
+# Foundry/AI local cache
+.foundry/
+.ai-cache/
+
+# Editor backups
+*~
+*.bak
+
+# TypeScript incremental
+*.tsbuildinfo
