@@ -23,6 +23,7 @@
   <a href="#web-ui">Web UI</a> •
   <a href="#cli-usage">CLI</a> •
   <a href="#agent-skill">Agent Skill</a> •
+  <a href="#using-with-vs-code-copilot-chat">Copilot Chat</a> •
   <a href="#contributing">Contributing</a>
 </p>
 
@@ -39,9 +40,16 @@ Generate comprehensive onboarding documentation for any repository using a hybri
 ## Quick Start
 
 ```bash
-# Install dependencies
-npm install
+# One-command setup (checks Node.js, Git, installs deps, verifies TypeScript, configures .env)
+npm run setup
 
+# Or on Windows directly:  .\setup.ps1
+# Or on Linux/macOS:       chmod +x setup.sh && ./setup.sh
+```
+
+Once setup completes, pick a mode:
+
+```bash
 # Run with Foundry Local (privacy-preserving)
 npm run onboard -- https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator
 
@@ -602,6 +610,115 @@ This project includes reusable agent skills at `.github/skills/`.
 └── microsoft-code-reference/
     └── SKILL.md                    # API/SDK verification
 ```
+
+## Using with VS Code GitHub Copilot Chat
+
+This project ships with **agent skills** and **MCP server configuration** that work directly inside [GitHub Copilot Chat](https://docs.github.com/en/copilot/using-github-copilot/asking-github-copilot-questions-in-your-ide) in VS Code. No CLI or web UI needed — just open the repo and start chatting.
+
+### Setup (One-Time)
+
+1. **Open this repo in VS Code**
+   ```
+   code learnskill-agent-foundrylocal
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Enable Agent Mode** — In Copilot Chat, click the mode dropdown (top of chat panel) and select **Agent**. This lets Copilot use the skills, MCP tools, and terminal commands defined in this project.
+
+4. **MCP server auto-configures** — The `.mcp.json` file at the project root registers the Microsoft Learn MCP server automatically. VS Code picks this up when you open the workspace. You should see `microsoft-learn` listed when you click the **Tools** icon (🔧) in the chat panel.
+
+### Talking to the Agent Skills
+
+Once in Agent Mode, type natural-language prompts in Copilot Chat. The skills in `.github/skills/` are loaded via `.github/copilot-instructions.md` and activate based on your request:
+
+#### Generate Onboarding Docs
+
+```
+Create onboarding pack for this repo
+```
+```
+Generate runbook for the project
+```
+```
+Help me understand this repo quickly
+```
+```
+Create architecture documentation
+```
+```
+Generate starter tasks for new contributors
+```
+
+Copilot will analyze the repo structure, call the LLM, and produce ONBOARDING.md, RUNBOOK.md, TASKS.md, AGENTS.md, diagram.mmd, and VALIDATION.md.
+
+#### Generate Agent Configuration
+
+```
+Generate AGENTS.md for this project
+```
+```
+Configure Copilot skills for this repo
+```
+```
+What MCP servers should this repo use?
+```
+
+#### Query Microsoft Documentation
+
+```
+Search Microsoft Learn for Azure Functions Python v2 triggers
+```
+```
+Find the quickstart for Azure AI Search
+```
+```
+What are the limits for Cosmos DB?
+```
+
+These queries use the `microsoft_docs_search` and `microsoft_docs_fetch` tools from the Microsoft Learn MCP server.
+
+#### Look Up API References & Code Samples
+
+```
+Find a code sample for uploading blobs with managed identity in Python
+```
+```
+What's the correct signature for BlobClient.UploadAsync?
+```
+```
+Show me how to use Semantic Kernel in C#
+```
+
+#### Create New Skills for Microsoft Technologies
+
+```
+Create a skill for Azure Container Apps
+```
+```
+Build an agent skill that teaches about Bicep
+```
+
+### What Happens Behind the Scenes
+
+When you type a prompt in Copilot Chat (Agent Mode):
+
+1. **Copilot reads** `.github/copilot-instructions.md` — this tells it about the project, available skills, and MCP tools
+2. **Skills activate** based on your prompt — each skill in `.github/skills/` has trigger phrases and step-by-step instructions Copilot follows
+3. **MCP tools fire** when Copilot needs external data — e.g., `microsoft_docs_search` queries learn.microsoft.com in real-time
+4. **Copilot uses the terminal** to run commands like `npx tsx src/index.ts` or `npm run build` when the skill requires it
+5. **Files are created/edited** directly in your workspace — you can review changes in the source control panel
+
+### Tips
+
+- **Be specific** — "Create onboarding pack for `https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator`" works better than "make docs"
+- **Check the Tools icon** (🔧) in Chat to verify `microsoft-learn` MCP server is connected
+- **Use Agent Mode**, not Ask or Edit mode — skills and MCP tools only work in Agent Mode
+- **Review generated files** before committing — AI output should always be verified
+- **Combine skills** — ask Copilot to generate an onboarding pack and then validate it against Microsoft Learn in the same conversation
 
 ## Microsoft Learn MCP Server
 
